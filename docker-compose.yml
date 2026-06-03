@@ -1,0 +1,51 @@
+# Full local stack: gateway + Redis + Prometheus + Grafana.
+#   cp .env.example .env   # optional: add real API keys
+#   docker compose up --build
+services:
+  infergate:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Use the example config (Redis-backed cache + rate limiting).
+      INFERGATE_CONFIG: /app/config/config.docker.yaml
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      VLLM_URL: ${VLLM_URL:-http://localhost:8000/v1}
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - infergate
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped

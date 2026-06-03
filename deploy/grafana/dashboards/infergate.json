@@ -1,0 +1,112 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "InferGate — LLM Gateway",
+  "uid": "infergate-main",
+  "tags": ["infergate", "llm"],
+  "timezone": "browser",
+  "time": { "from": "now-15m", "to": "now" },
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request rate (req/s) by status",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "sum by (status) (rate(infergate_requests_total[1m]))", "legendFormat": "{{status}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "End-to-end latency (p50 / p95 / p99)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache hit rate",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "steps": [ { "color": "red", "value": 0 }, { "color": "yellow", "value": 0.3 }, { "color": "green", "value": 0.6 } ] } } },
+      "targets": [
+        { "expr": "sum(rate(infergate_cache_events_total{outcome=~\".*_hit\"}[5m])) / clamp_min(sum(rate(infergate_cache_events_total[5m])), 0.0001)", "legendFormat": "hit rate" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache events (exact / semantic / miss)",
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "sum by (outcome) (rate(infergate_cache_events_total[1m]))", "legendFormat": "{{outcome}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Token throughput (tokens/s)",
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 8 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "sum by (direction) (rate(infergate_tokens_total[1m]))", "legendFormat": "{{direction}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Routing decisions by provider (req/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "sum by (provider) (rate(infergate_routing_decisions_total[1m]))", "legendFormat": "{{provider}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Upstream latency p99 by provider",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.99, sum(rate(infergate_upstream_latency_seconds_bucket[5m])) by (le, provider))", "legendFormat": "{{provider}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Estimated cost (USD/s) by model",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "targets": [
+        { "expr": "sum by (model) (rate(infergate_estimated_cost_usd_total[5m]))", "legendFormat": "{{model}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "In-flight requests by deployment",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "infergate_inflight_requests", "legendFormat": "{{provider}}/{{upstream_model}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Failovers & rate-limited (events/s)",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "datasource": { "type": "prometheus" },
+      "targets": [
+        { "expr": "sum by (provider) (rate(infergate_routing_failovers_total[1m]))", "legendFormat": "failover {{provider}}" },
+        { "expr": "sum(rate(infergate_rate_limited_total[1m]))", "legendFormat": "rate-limited" }
+      ]
+    }
+  ]
+}

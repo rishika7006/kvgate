@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "infergate"
+version = "0.1.0"
+description = "An OpenAI-compatible LLM inference gateway with smart routing, semantic caching, rate limiting, and observability."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [{ name = "Rishika Vaish" }]
+keywords = ["llm", "gateway", "openai", "vllm", "inference", "proxy", "router", "cache", "genai", "mlops"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "httpx>=0.27",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "PyYAML>=6.0",
+    "prometheus-client>=0.20",
+    "tenacity>=8.2",
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+redis = ["redis>=5.0"]
+embeddings = ["sentence-transformers>=2.6"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "respx>=0.21",
+    "locust>=2.24",
+    "types-PyYAML>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/rishabhvaish/infergate"
+Repository = "https://github.com/rishabhvaish/infergate"
+Issues = "https://github.com/rishabhvaish/infergate/issues"
+
+[project.scripts]
+infergate = "infergate.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/infergate"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4"]
+ignore = [
+    "B008",  # FastAPI uses function calls in argument defaults (Depends)
+    # pydantic evaluates annotations at runtime; PEP 604 unions / PEP 585 generics
+    # are NOT runtime-safe on Python 3.9, so keep typing.Optional/Dict/List.
+    "UP006",
+    "UP007",
+    "UP035",
+    "UP045",
+]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true
+warn_unused_ignores = false

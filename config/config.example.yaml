@@ -1,0 +1,111 @@
+# InferGate configuration example.
+# Copy to config/config.yaml and edit. Secrets use ${ENV_VAR} expansion so they
+# never live in the file. Run with: infergate run -c config/config.yaml
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  log_level: INFO
+  request_timeout_s: 60
+
+# ---- Auth (optional) ----
+# When enabled, clients must send `Authorization: Bearer <key>`.
+auth:
+  enabled: false
+  api_keys:
+    - key: ${INFERGATE_DEMO_KEY:-sk-demo-local}
+      tenant: demo
+      rpm: 1200          # per-key override of ratelimit.default_rpm
+
+# ---- Caching ----
+cache:
+  enabled: true
+  backend: memory        # memory | redis  (redis = cross-replica reuse)
+  redis_url: ${REDIS_URL:-redis://localhost:6379/0}
+  ttl_seconds: 3600
+  semantic:
+    enabled: true
+    threshold: 0.95      # cosine similarity required for a semantic hit
+    embedder: hashing    # hashing (zero-dep) | sentence_transformers | openai
+    model: all-MiniLM-L6-v2
+    max_entries: 5000
+
+# ---- Rate limiting (token bucket) ----
+ratelimit:
+  enabled: true
+  backend: memory        # memory | redis
+  redis_url: ${REDIS_URL:-redis://localhost:6379/0}
+  default_rpm: 600
+  burst: 60
+
+# ---- Routing ----
+routing:
+  strategy: latency      # round_robin | weighted | latency | least_busy | cost
+  latency_ewma_alpha: 0.3
+  failure_threshold: 3   # consecutive failures before the circuit opens
+  cooldown_s: 15
+
+# ---- Providers (upstream backends) ----
+providers:
+  - name: mock-fast
+    type: mock
+    latency_ms: 40
+    tokens_per_second: 1200
+
+  - name: mock-smart
+    type: mock
+    latency_ms: 180
+    tokens_per_second: 600
+
+  # A self-hosted vLLM / TGI server (OpenAI-compatible API).
+  - name: vllm-local
+    type: openai_compatible
+    base_url: ${VLLM_URL:-http://localhost:8000/v1}
+    api_key: ${VLLM_API_KEY:-}
+
+  # Hosted OpenAI.
+  - name: openai
+    type: openai
+    api_key: ${OPENAI_API_KEY:-}
+
+  # Hosted Anthropic.
+  - name: anthropic
+    type: anthropic
+    api_key: ${ANTHROPIC_API_KEY:-}
+
+# ---- Models (what clients request -> which deployments serve it) ----
+models:
+  # Works out of the box with no API keys.
+  - name: demo
+    deployments:
+      - provider: mock-fast
+        model: mock-fast
+        weight: 2
+        cost_per_1k_input: 0.0005
+        cost_per_1k_output: 0.0015
+      - provider: mock-smart
+        model: mock-smart
+        weight: 1
+        cost_per_1k_input: 0.003
+        cost_per_1k_output: 0.006
+
+  # Example: route a logical "gpt-4o" across self-hosted vLLM + hosted OpenAI.
+  - name: gpt-4o
+    deployments:
+      - provider: vllm-local
+        model: meta-llama/Llama-3.1-8B-Instruct
+        weight: 3
+        cost_per_1k_input: 0.0
+        cost_per_1k_output: 0.0
+      - provider: openai
+        model: gpt-4o
+        weight: 1
+        cost_per_1k_input: 0.005
+        cost_per_1k_output: 0.015
+
+  - name: claude
+    deployments:
+      - provider: anthropic
+        model: claude-3-5-sonnet-20241022
+        cost_per_1k_input: 0.003
+        cost_per_1k_output: 0.015
