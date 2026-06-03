@@ -1,0 +1,26 @@
+# Baseline (KV-blind) counterpart to config.mock-kvaware.yaml: identical mock fleet,
+# but round_robin routing. Used for the D (baseline) vs E (prefix_kv_aware) contrast
+# in a GPU-free dry run.
+#   infergate run -c config/config.mock-rr.yaml --port 8088
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+cache:
+  enabled: false
+ratelimit:
+  enabled: false
+
+routing:
+  strategy: round_robin
+
+providers:
+  - { name: mock-r1, type: mock, latency_ms: 60, tokens_per_second: 800 }
+  - { name: mock-r2, type: mock, latency_ms: 60, tokens_per_second: 800 }
+
+models:
+  - name: demo
+    deployments:
+      - { provider: mock-r1, model: replica-1 }
+      - { provider: mock-r2, model: replica-2 }

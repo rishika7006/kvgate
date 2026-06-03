@@ -75,6 +75,31 @@ def test_affinity_recorded_in_index():
     assert r.affinity.block_count(chosen.key) > 0
 
 
+def test_load_guard_prevents_snowball():
+    # With a tight skew, an overloaded warm replica is bypassed for the idle one.
+    s = _settings(max_inflight_skew=2)
+    r = _router(s)
+    req = _req("a long shared system prefix " * 20)
+    first = r.pick("qwen-vl", request=req)
+    # Simulate the warm replica being heavily loaded (beyond the skew).
+    states = {st.key: st for st in r.states("qwen-vl")}
+    states[first.key].in_flight = 10
+    second = r.pick("qwen-vl", request=req)
+    assert second.key != first.key  # routed to the idle replica despite the warm prefix
+
+
+def test_high_skew_keeps_affinity_sticky():
+    # With a generous skew, prefix affinity wins even under moderate load.
+    s = _settings(max_inflight_skew=100)
+    r = _router(s)
+    req = _req("a long shared system prefix " * 20)
+    first = r.pick("qwen-vl", request=req)
+    states = {st.key: st for st in r.states("qwen-vl")}
+    states[first.key].in_flight = 5
+    second = r.pick("qwen-vl", request=req)
+    assert second.key == first.key  # still sticky to the warm replica
+
+
 async def test_service_routes_repeated_prompt_to_same_provider():
     s = _settings()
     router = _router(s)

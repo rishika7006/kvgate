@@ -86,6 +86,11 @@ class PrefixKvAwareSettings(BaseModel):
     max_blocks_per_replica: int = 200_000
     weight_prefix: float = 1.0  # reward for each matched (warm) prefix block
     weight_load: float = 0.5  # penalty per in-flight request on a replica
+    # Load guard: a replica may carry at most this many more in-flight requests
+    # than the least-busy replica and still be eligible for prefix affinity. This
+    # stops a shared (e.g. system-prompt) prefix from snowballing all traffic onto
+    # one replica. Lower = more balanced; higher = more cache-reuse-greedy.
+    max_inflight_skew: int = 8
     tokenizer: Literal["approx", "hf"] = "approx"
     hf_model: Optional[str] = None
     image_key: Literal["bytes_sha256", "url"] = "bytes_sha256"

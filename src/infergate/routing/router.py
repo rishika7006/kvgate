@@ -122,10 +122,17 @@ class Router:
         chain = key.block_hashes
         now = time.monotonic()
 
+        # Load guard: exclude replicas that are overloaded relative to the least-busy
+        # one, so a shared prefix can't snowball all traffic onto a single replica.
+        min_load = min(s.in_flight for s in pool)
+        eligible = [s for s in pool if s.in_flight <= min_load + self._pkv.max_inflight_skew]
+        if not eligible:  # pragma: no cover - defensive; min_load member is always eligible
+            eligible = pool
+
         best: Optional[DeploymentState] = None
         best_score = float("-inf")
         best_matched = 0
-        for s in pool:
+        for s in eligible:
             matched = self._affinity.matched_blocks(s.key, chain, now)
             score = self._pkv.weight_prefix * matched - self._pkv.weight_load * s.in_flight
             if score > best_score:
@@ -133,7 +140,7 @@ class Router:
 
         # No warm prefix anywhere -> cold path: use the configured load/cost fallback.
         if best is None or best_matched == 0:
-            chosen = self._cold_fallback(pool, self._rr_counter.get(model, 0))
+            chosen = self._cold_fallback(eligible, self._rr_counter.get(model, 0))
             self._rr_counter[model] = self._rr_counter.get(model, 0) + 1
             metrics.ROUTING_AFFINITY_HITS.labels(model, "cold").inc()
             metrics.ROUTING_AFFINITY_MATCHED_BLOCKS.labels(model).observe(0)

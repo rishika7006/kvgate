@@ -20,6 +20,7 @@ routing:
     affinity_ttl_s: 600
     weight_prefix: 1.0
     weight_load: 0.5
+    max_inflight_skew: 4    # load guard: keep replicas balanced under concurrency
     image_key: bytes_sha256
     cold_fallback: least_busy
 
