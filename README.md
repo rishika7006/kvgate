@@ -25,6 +25,7 @@ Serving open-source LLMs in production means re-solving the same problems every 
 |---|---|
 | 🔌 **OpenAI-compatible API** | `POST /v1/chat/completions` (streaming + blocking) and `/v1/models`. Existing OpenAI SDKs work unchanged — just change the base URL. |
 | 🧭 **Smart routing** | Route a logical model across many deployments by `latency` (EWMA), `least_busy`, `cost`, `weighted`, or `round_robin`. |
+| 🧠 **KV/prefix-aware routing** | `prefix_kv_aware` routes requests sharing a prompt prefix — **and the same image** — to the replica that already has that prefix's KV cache warm, maximizing engine-side reuse. Multimodal-aware and needs no cooperation from the engine. |
 | ♻️ **Failover + circuit breaking** | Retryable upstream errors automatically fail over to the next-best deployment; repeatedly-failing deployments are ejected and given cooldown. |
 | ⚡ **Exact + semantic caching** | Identical requests hit an exact cache; *similar* prompts hit a semantic cache (cosine similarity). Redis backend enables **cross-replica reuse**. |
 | 🚦 **Rate limiting** | Token-bucket limits per API key / tenant, in-memory or Redis (distributed). |
@@ -172,7 +173,7 @@ Watch the cache hit rate and p99 latency move in Grafana as concurrency climbs.
 
 See [`config/config.example.yaml`](config/config.example.yaml) for the full, commented schema. Highlights:
 
-- `routing.strategy`: `round_robin` · `weighted` · `latency` · `least_busy` · `cost`
+- `routing.strategy`: `round_robin` · `weighted` · `latency` · `least_busy` · `cost` · `prefix_kv_aware`
 - `cache.backend`: `memory` · `redis`; `cache.semantic.embedder`: `hashing` · `sentence_transformers` · `openai`
 - `ratelimit.backend`: `memory` · `redis`; `default_rpm`, `burst`
 - `routing.failure_threshold` / `routing.cooldown_s`: circuit breaker tuning
@@ -201,8 +202,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Roadmap
 
+- [x] Multimodal KV/prefix-aware routing (`prefix_kv_aware`) — image-hash-aware affinity
 - [ ] Next.js dashboard (live tokens/sec, p99, cache hit rate, cost per model)
-- [ ] Prefix-aware (KV-cache) routing to maximize vLLM cache hits
+- [ ] Redis-backed affinity index for cross-gateway-replica prefix routing
 - [ ] Redis-backed semantic index for cross-replica semantic cache
 - [ ] Streaming failover mid-response
 - [ ] Per-tenant budgets and spend caps

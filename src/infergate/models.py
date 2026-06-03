@@ -13,9 +13,39 @@ from pydantic import BaseModel, Field
 
 
 class ChatMessage(BaseModel):
+    # `content` is either a plain string or the OpenAI multimodal "parts" list:
+    #   [{"type": "text", "text": "..."},
+    #    {"type": "image_url", "image_url": {"url": "https://..." | "data:image/..."}}]
     role: Literal["system", "user", "assistant", "tool"]
-    content: Optional[str] = None
+    content: Optional[Union[str, List[Any]]] = None
     name: Optional[str] = None
+
+    def text_content(self) -> str:
+        """The textual part of the message, flattening multimodal parts."""
+        if self.content is None:
+            return ""
+        if isinstance(self.content, str):
+            return self.content
+        parts: List[str] = []
+        for p in self.content:
+            if isinstance(p, str):
+                parts.append(p)
+            elif isinstance(p, dict) and "text" in p:
+                parts.append(p.get("text") or "")
+        return " ".join(parts)
+
+    def image_refs(self) -> List[str]:
+        """URLs / data-URIs of any images attached to this message, in order."""
+        refs: List[str] = []
+        if isinstance(self.content, list):
+            for p in self.content:
+                if isinstance(p, dict) and p.get("type") == "image_url":
+                    iu = p.get("image_url")
+                    if isinstance(iu, dict):
+                        refs.append(iu.get("url", "") or "")
+                    elif isinstance(iu, str):
+                        refs.append(iu)
+        return refs
 
 
 class ChatCompletionRequest(BaseModel):
@@ -32,7 +62,10 @@ class ChatCompletionRequest(BaseModel):
 
     def prompt_text(self) -> str:
         """Flatten messages into a stable string for cache keying / mock output."""
-        return "\n".join(f"{m.role}: {m.content or ''}" for m in self.messages)
+        return "\n".join(f"{m.role}: {m.text_content()}" for m in self.messages)
+
+    def has_images(self) -> bool:
+        return any(m.image_refs() for m in self.messages)
 
 
 class Usage(BaseModel):

@@ -1,0 +1,48 @@
+# InferGate config for the multimodal KV/prefix-aware routing benchmark.
+# Two vLLM+LMCache replicas of the SAME multimodal model behind one logical model.
+# Run: infergate run -c config/config.kvaware.example.yaml
+#
+# Scenario D (baseline): set routing.strategy = round_robin   (KV-blind load balancer)
+# Scenario E (headline):  set routing.strategy = prefix_kv_aware
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+cache:
+  enabled: false        # disable response cache so we measure ROUTING effects only
+
+ratelimit:
+  enabled: false
+
+routing:
+  strategy: prefix_kv_aware     # flip to round_robin for the baseline run
+  failure_threshold: 3
+  cooldown_s: 15
+  prefix_kv_aware:
+    block_size: 16
+    affinity_backend: memory
+    affinity_ttl_s: 600
+    max_blocks_per_replica: 200000
+    weight_prefix: 1.0
+    weight_load: 0.5
+    tokenizer: approx           # switch to hf for tokenizer-faithful blocks
+    hf_model: llava-hf/llava-onevision-qwen2-7b-ov-hf
+    image_key: bytes_sha256
+    cold_fallback: least_busy
+
+providers:
+  - name: vllm-r1
+    type: openai_compatible
+    base_url: ${VLLM_R1_URL:-http://gpu1:8001/v1}
+    api_key: ${VLLM_API_KEY:-}
+  - name: vllm-r2
+    type: openai_compatible
+    base_url: ${VLLM_R2_URL:-http://gpu2:8002/v1}
+    api_key: ${VLLM_API_KEY:-}
+
+models:
+  - name: vlm                   # what the benchmark client requests
+    deployments:
+      - { provider: vllm-r1, model: llava-hf/llava-onevision-qwen2-7b-ov-hf }
+      - { provider: vllm-r2, model: llava-hf/llava-onevision-qwen2-7b-ov-hf }

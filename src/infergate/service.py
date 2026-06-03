@@ -84,7 +84,7 @@ class GatewayService:
 
         for _ in range(self.max_attempts):
             try:
-                state = self.router.pick(request.model, exclude=tried)
+                state = self.router.pick(request.model, exclude=tried, request=request)
             except NoDeploymentAvailable:
                 break
 
@@ -176,7 +176,7 @@ class GatewayService:
 
         for _ in range(self.max_attempts):
             try:
-                state = self.router.pick(request.model, exclude=tried)
+                state = self.router.pick(request.model, exclude=tried, request=request)
             except NoDeploymentAvailable:
                 break
 

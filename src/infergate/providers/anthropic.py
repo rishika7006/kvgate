@@ -25,10 +25,10 @@ def _split_system(messages: List[ChatMessage]) -> Tuple[str, list]:
     system_parts, convo = [], []
     for m in messages:
         if m.role == "system":
-            system_parts.append(m.content or "")
+            system_parts.append(m.text_content())
         else:
             role = "assistant" if m.role == "assistant" else "user"
-            convo.append({"role": role, "content": m.content or ""})
+            convo.append({"role": role, "content": m.text_content()})
     return "\n".join(system_parts), convo
 
 

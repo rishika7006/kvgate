@@ -71,6 +71,21 @@ ROUTING_FAILOVERS = Counter(
     registry=REGISTRY,
 )
 
+ROUTING_AFFINITY_HITS = Counter(
+    "infergate_routing_affinity_total",
+    "prefix_kv_aware routing decisions by affinity outcome.",
+    ["model", "outcome"],  # warm | cold
+    registry=REGISTRY,
+)
+
+ROUTING_AFFINITY_MATCHED_BLOCKS = Histogram(
+    "infergate_routing_affinity_matched_blocks",
+    "Number of warm prefix blocks matched on the chosen replica.",
+    ["model"],
+    buckets=(0, 1, 2, 4, 8, 16, 32, 64, 128, 256),
+    registry=REGISTRY,
+)
+
 RATE_LIMITED = Counter(
     "infergate_rate_limited_total",
     "Requests rejected by the rate limiter.",

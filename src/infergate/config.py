@@ -77,14 +77,35 @@ class RateLimitSettings(BaseModel):
     burst: int = 60
 
 
+class PrefixKvAwareSettings(BaseModel):
+    """Tuning for the `prefix_kv_aware` routing strategy."""
+
+    block_size: int = 16
+    affinity_backend: Literal["memory", "redis"] = "memory"
+    affinity_ttl_s: float = 300.0
+    max_blocks_per_replica: int = 200_000
+    weight_prefix: float = 1.0  # reward for each matched (warm) prefix block
+    weight_load: float = 0.5  # penalty per in-flight request on a replica
+    tokenizer: Literal["approx", "hf"] = "approx"
+    hf_model: Optional[str] = None
+    image_key: Literal["bytes_sha256", "url"] = "bytes_sha256"
+    cold_fallback: Literal["round_robin", "weighted", "latency", "least_busy", "cost"] = (
+        "least_busy"
+    )
+
+
 class RoutingSettings(BaseModel):
-    strategy: Literal["round_robin", "weighted", "latency", "least_busy", "cost"] = "latency"
+    strategy: Literal[
+        "round_robin", "weighted", "latency", "least_busy", "cost", "prefix_kv_aware"
+    ] = "latency"
     # EWMA smoothing factor for the latency strategy.
     latency_ewma_alpha: float = 0.3
     # Open the circuit after this many consecutive failures on a deployment.
     failure_threshold: int = 3
     # Seconds a deployment stays ejected before a trial request is allowed.
     cooldown_s: float = 15.0
+    # Settings for the prefix_kv_aware strategy (used only when selected).
+    prefix_kv_aware: PrefixKvAwareSettings = Field(default_factory=PrefixKvAwareSettings)
 
 
 class ProviderConfig(BaseModel):
