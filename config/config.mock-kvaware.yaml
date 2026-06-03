@@ -1,0 +1,34 @@
+# Mock fleet for dry-running the KV/prefix-aware router with NO GPU.
+# Two mock replicas behind one logical "demo" model, prefix_kv_aware routing,
+# response cache disabled so we observe routing behavior only.
+#   infergate run -c config/config.mock-kvaware.yaml
+#   python loadtest/multimodal_bench.py --model demo
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+cache:
+  enabled: false
+ratelimit:
+  enabled: false
+
+routing:
+  strategy: prefix_kv_aware     # flip to round_robin for the KV-blind baseline
+  prefix_kv_aware:
+    block_size: 16
+    affinity_ttl_s: 600
+    weight_prefix: 1.0
+    weight_load: 0.5
+    image_key: bytes_sha256
+    cold_fallback: least_busy
+
+providers:
+  - { name: mock-r1, type: mock, latency_ms: 60, tokens_per_second: 800 }
+  - { name: mock-r2, type: mock, latency_ms: 60, tokens_per_second: 800 }
+
+models:
+  - name: demo
+    deployments:
+      - { provider: mock-r1, model: replica-1 }
+      - { provider: mock-r2, model: replica-2 }
