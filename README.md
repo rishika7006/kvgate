@@ -58,6 +58,25 @@ Serving open-source LLMs in production means re-solving the same problems every 
 
 ---
 
+## How KV/prefix-aware routing works (in brief)
+
+When many LLM replicas sit behind a load balancer, a normal balancer is *KV-blind* —
+it may send a request to a replica that never saw its prefix, wasting the KV cache
+another replica already holds. `prefix_kv_aware` fixes this:
+
+1. **Fingerprint** the prompt into a chain of block hashes; **each image is hashed**
+   into the key, so same-text/different-image diverges and the same image collapses.
+2. **Score** each replica by how long a *leading* prefix it has served recently
+   (a per-replica affinity table with TTL + LRU), balanced against load.
+3. **Route** to the best replica, with a **load guard** so a shared system prompt
+   can't snowball all traffic onto one replica.
+
+It **infers** affinity from traffic the gateway already sees — needing **zero
+cooperation from the inference engine** (no KV-event feed), which is what keeps it
+lightweight and vendor-neutral versus Kubernetes-bound systems (vLLM Production
+Stack, NVIDIA Dynamo, llm-d). Full explanation + honest comparison:
+[`docs/HOW_ROUTING_WORKS.md`](docs/HOW_ROUTING_WORKS.md).
+
 ## Quickstart (no API keys needed)
 
 ```bash

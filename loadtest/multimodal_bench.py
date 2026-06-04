@@ -28,7 +28,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import json
+import mimetypes
+import os
 import random
 import re
 import time
@@ -55,8 +58,32 @@ _QUESTIONS = [
 ]
 
 
-def _image_ref(image_id: int) -> str:
+def _synthetic_ref(image_id: int) -> str:
+    # A placeholder reference used for GPU-free dry runs (the mock provider ignores
+    # image content). Real vLLM would try to FETCH a URL, so for real runs pass
+    # --images-dir to send actual images as base64 data URIs instead.
     return f"https://bench.infergate.local/images/img_{image_id:05d}.png"
+
+
+def _data_uri(path: str) -> str:
+    """Encode a local image file as an OpenAI-compatible base64 data URI."""
+    mime = mimetypes.guess_type(path)[0] or "image/jpeg"
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+    return f"data:{mime};base64,{b64}"
+
+
+def load_image_refs(images_dir: str, limit: int) -> List[str]:
+    """Load up to `limit` real images from a directory as base64 data URIs."""
+    exts = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
+    files = sorted(
+        os.path.join(images_dir, f)
+        for f in os.listdir(images_dir)
+        if os.path.splitext(f)[1].lower() in exts
+    )
+    if not files:
+        raise SystemExit(f"No image files found in {images_dir}")
+    return [_data_uri(p) for p in files[:limit]]
 
 
 def build_trace(
@@ -65,6 +92,7 @@ def build_trace(
     turns: int = 6,
     revisit_ratio: float = 0.7,
     seed: int = 1234,
+    image_refs: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """Build a deterministic list of request specs (each a chat payload body).
 
@@ -72,6 +100,8 @@ def build_trace(
     shared prefix). With probability `revisit_ratio` a session reuses an image
     already seen (inter-session reuse → cross-replica routing opportunity).
     """
+    if image_refs:
+        num_images = min(num_images, len(image_refs))
     rng = random.Random(seed)
     requests: List[Dict[str, Any]] = []
     seen: List[int] = []
@@ -86,7 +116,7 @@ def build_trace(
             if image_id not in seen:
                 seen.append(image_id)
 
-        img = _image_ref(image_id)
+        img = image_refs[image_id % len(image_refs)] if image_refs else _synthetic_ref(image_id)
         history: List[Dict[str, Any]] = [{"role": "system", "content": _SYSTEM_PROMPT}]
         for t in range(turns):
             question = _QUESTIONS[t % len(_QUESTIONS)]
@@ -238,15 +268,19 @@ def _print_summary(summary: Dict[str, Any]) -> None:
 
 
 async def _amain(args: argparse.Namespace) -> None:
+    image_refs = load_image_refs(args.images_dir, args.images) if args.images_dir else None
     trace = build_trace(
         num_images=args.images,
         sessions=args.sessions,
         turns=args.turns,
         revisit_ratio=args.revisit_ratio,
         seed=args.seed,
+        image_refs=image_refs,
     )
+    src = f"{len(image_refs)} real images from {args.images_dir}" if image_refs else \
+        f"{args.images} synthetic image refs (dry-run only)"
     print(f"Generated {len(trace)} requests "
-          f"({args.sessions} sessions x {args.turns} turns, {args.images} images).")
+          f"({args.sessions} sessions x {args.turns} turns; {src}).")
     results = await run_benchmark(args.host, args.model, trace, args.concurrency)
     affinity = await _scrape_affinity(args.host)
     summary = summarize(results, affinity)
@@ -261,7 +295,9 @@ def main() -> None:
     p = argparse.ArgumentParser(description="InferGate multimodal routing benchmark")
     p.add_argument("--host", default="http://localhost:8080")
     p.add_argument("--model", default="demo")
-    p.add_argument("--images", type=int, default=50)
+    p.add_argument("--images", type=int, default=50, help="Number of distinct images to use")
+    p.add_argument("--images-dir", default=None, dest="images_dir",
+                   help="Directory of REAL images (sent as base64). Required for real vLLM runs.")
     p.add_argument("--sessions", type=int, default=40)
     p.add_argument("--turns", type=int, default=6)
     p.add_argument("--revisit-ratio", type=float, default=0.7, dest="revisit_ratio")
