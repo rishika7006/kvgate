@@ -1,0 +1,34 @@
+# Phase-2 GPU benchmark config: InferGate in front of two real vLLM+LMCache replicas.
+# Flip routing.strategy between round_robin (scenario D, baseline) and
+# prefix_kv_aware (scenario E, headline), restarting the gateway between runs.
+#   infergate run -c config/gpu.yaml --port 8080
+
+server:
+  host: 0.0.0.0
+  port: 8080
+
+cache:
+  enabled: false        # isolate routing behavior; no response-cache shortcut
+ratelimit:
+  enabled: false
+
+routing:
+  strategy: round_robin        # scenario D. For scenario E set: prefix_kv_aware
+  prefix_kv_aware:
+    block_size: 16
+    affinity_ttl_s: 600
+    weight_prefix: 1.0
+    weight_load: 0.5
+    max_inflight_skew: 8
+    image_key: bytes_sha256
+    cold_fallback: least_busy
+
+providers:
+  - { name: r1, type: openai_compatible, base_url: http://localhost:8001/v1 }
+  - { name: r2, type: openai_compatible, base_url: http://localhost:8002/v1 }
+
+models:
+  - name: vlm
+    deployments:
+      - { provider: r1, model: llava-hf/llava-onevision-qwen2-7b-ov-hf }
+      - { provider: r2, model: llava-hf/llava-onevision-qwen2-7b-ov-hf }
