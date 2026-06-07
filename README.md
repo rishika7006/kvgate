@@ -222,7 +222,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Roadmap
 
 - [x] Multimodal KV/prefix-aware routing (`prefix_kv_aware`) — image-hash-aware affinity
-- [ ] Next.js dashboard (live tokens/sec, p99, cache hit rate, cost per model)
+- [x] Next.js live dashboard — routing state, cache + KV-affinity hit rates ([`dashboard/`](dashboard/))
 - [ ] Redis-backed affinity index for cross-gateway-replica prefix routing
 - [ ] Redis-backed semantic index for cross-replica semantic cache
 - [ ] Streaming failover mid-response
