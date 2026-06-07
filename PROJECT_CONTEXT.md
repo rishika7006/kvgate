@@ -129,6 +129,9 @@ traffic with no engine changes, and benchmarked it on vision-language models."*
 - **M1.5**: load guard (fixed a real 120/0 snowball → balanced 59/61 in the live dry run).
 - **M2**: benchmark harness (`loadtest/multimodal_bench.py`) + real-image support (`--images-dir`).
 - **59 tests passing**; ruff clean; mypy clean (runs in CI).
+- **Next.js + TypeScript + Tailwind live dashboard** (`dashboard/`) — polls /admin/stats and
+  /metrics; shows routing strategy, per-replica state, cache + KV-affinity hit rates, tokens.
+  Builds and serves cleanly (verified). This covers the "modern React/Next.js frontend" goal.
 - **Proven running (no GPU):** live dry run = 120/120 OK, **98.3% routing-affinity hit rate**,
   balanced across replicas.
 - Docs: research, plan, decision gates, routing explainer, RunPod runbook, benchmark runbook.
@@ -179,6 +182,7 @@ infergate/
 │   ├── cache/      # exact + semantic response cache (memory/redis)
 │   ├── ratelimit/  # token-bucket limiter
 │   └── observability/metrics.py
+├── dashboard/                     # Next.js + TS + Tailwind live dashboard
 ├── loadtest/multimodal_bench.py   # the benchmark client
 ├── scripts/compare_results.py     # turns run JSONs into a comparison table
 ├── config/                        # example + mock + gpu.yaml configs
@@ -198,6 +202,7 @@ infergate/
 ## 11. Tech stack (complete)
 
 - **Language/packaging:** Python 3.9+, hatchling, Git, GitHub Actions (CI).
+- **Frontend:** Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS (`dashboard/`).
 - **Gateway runtime:** FastAPI, Uvicorn, Pydantic v2, httpx, click, PyYAML.
 - **Routing internals:** stdlib only — hashlib, collections, time, math, random, asyncio.
 - **Storage (optional):** Redis (response cache + rate limit); sentence-transformers (optional
