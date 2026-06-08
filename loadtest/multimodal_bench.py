@@ -58,6 +58,16 @@ _QUESTIONS = [
 ]
 
 
+def _context_doc(image_id: int, n_tokens: int) -> str:
+    """Deterministic, unique-per-image filler simulating a large RAG document.
+
+    Prepended to the system prompt so each context's KV is large AND distinct,
+    forcing GPU-cache overflow under a capped KV budget — the regime where
+    LMCache's CPU offload beats vLLM's GPU-only prefix cache.
+    """
+    return " ".join(f"doc{image_id}tok{i}" for i in range(max(0, n_tokens)))
+
+
 def _synthetic_ref(image_id: int) -> str:
     # A placeholder reference used for GPU-free dry runs (the mock provider ignores
     # image content). Real vLLM would try to FETCH a URL, so for real runs pass
@@ -93,6 +103,7 @@ def build_trace(
     revisit_ratio: float = 0.7,
     seed: int = 1234,
     image_refs: Optional[List[str]] = None,
+    context_tokens: int = 0,
 ) -> List[Dict[str, Any]]:
     """Build a deterministic list of request specs (each a chat payload body).
 
@@ -117,7 +128,10 @@ def build_trace(
                 seen.append(image_id)
 
         img = image_refs[image_id % len(image_refs)] if image_refs else _synthetic_ref(image_id)
-        history: List[Dict[str, Any]] = [{"role": "system", "content": _SYSTEM_PROMPT}]
+        sys_content = _SYSTEM_PROMPT
+        if context_tokens > 0:
+            sys_content = _context_doc(image_id, context_tokens) + "\n\n" + _SYSTEM_PROMPT
+        history: List[Dict[str, Any]] = [{"role": "system", "content": sys_content}]
         for t in range(turns):
             question = _QUESTIONS[t % len(_QUESTIONS)]
             user_turn = {
@@ -215,10 +229,12 @@ async def _scrape_affinity(host: str) -> Dict[str, float]:
     except httpx.HTTPError:  # pragma: no cover - network
         return out
     for outcome in ("warm", "cold"):
-        m = re.search(
-            r'infergate_routing_affinity_total\{[^}]*outcome="%s"[^}]*\}\s+([0-9.eE+]+)' % outcome,
-            text,
+        pattern = (
+            r'infergate_routing_affinity_total\{[^}]*outcome="'
+            + outcome
+            + r'"[^}]*\}\s+([0-9.eE+]+)'
         )
+        m = re.search(pattern, text)
         if m:
             out[outcome] = float(m.group(1))
     return out
@@ -258,8 +274,8 @@ def _print_summary(summary: Dict[str, Any]) -> None:
           f"({summary['failed']} failed)")
     print(f"wall clock     : {summary['wall_s']}s")
     print(f"throughput     : {summary['throughput_rps']} req/s")
-    print(f"TTFT  p50/p95/p99 (ms): "
-          f"{summary['ttft_ms']['p50']} / {summary['ttft_ms']['p95']} / {summary['ttft_ms']['p99']}")
+    t = summary["ttft_ms"]
+    print(f"TTFT  p50/p95/p99 (ms): {t['p50']} / {t['p95']} / {t['p99']}")
     print(f"E2E   p50/p95     (ms): {summary['e2e_ms']['p50']} / {summary['e2e_ms']['p95']}")
     if summary["affinity_hit_rate"] is not None:
         print(f"routing affinity: {summary['affinity_hit_rate'] * 100:.1f}% warm "
@@ -276,6 +292,7 @@ async def _amain(args: argparse.Namespace) -> None:
         revisit_ratio=args.revisit_ratio,
         seed=args.seed,
         image_refs=image_refs,
+        context_tokens=args.context_tokens,
     )
     src = f"{len(image_refs)} real images from {args.images_dir}" if image_refs else \
         f"{args.images} synthetic image refs (dry-run only)"
@@ -303,6 +320,9 @@ def main() -> None:
     p.add_argument("--revisit-ratio", type=float, default=0.7, dest="revisit_ratio")
     p.add_argument("--concurrency", type=int, default=16)
     p.add_argument("--seed", type=int, default=1234)
+    p.add_argument("--context-tokens", type=int, default=0, dest="context_tokens",
+                   help="Prepend a unique ~N-token document per image (RAG/long-context mode) "
+                        "to create a large distinct working set that overflows the GPU KV cache.")
     p.add_argument("--out", default=None, help="Write the JSON summary to this path")
     args = p.parse_args()
     asyncio.run(_amain(args))
