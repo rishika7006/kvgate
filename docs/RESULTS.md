@@ -18,20 +18,37 @@ with a different-seed run, server restarted between configs). Workload: 240 requ
 **Takeaway:** on a multimodal workload with a long shared prompt + repeated images,
 vLLM prefix caching cut time-to-first-token ~74× and raised throughput ~9×.
 
-## ⏳ Pending: Scenario D vs E — KV/prefix-aware routing (2 replicas)
+## ✅ Captured: LMCache multimodal offload under GPU memory pressure (Scenario C)
 
-Not yet completed (GPU ran out of memory from orphaned workers; pod restart needed).
-Early signal from a partial run: `prefix_kv_aware` showed **99.2% routing-affinity hit
-rate** vs round-robin's none — routing logic works; need a clean 2-replica run for the
-TTFT payoff. Plan: two vLLM replicas on the one 48 GB GPU (`--gpu-memory-utilization
-0.42` each), gateway round-robin (D) vs prefix_kv_aware (E).
+**The headline LMCache result.** Single A40, Llava-OneVision-7B, 40 large (1024×1024)
+images, 120 requests. We cap the GPU KV cache (`--num-gpu-blocks-override`) to simulate
+memory pressure / a large working set — the regime LMCache exists for (this is the
+multimodal KV-offload-to-CPU technique, the same idea as the AWS work). LMCache **0.3.7**
+(multimodal-capable; `apply_mm_hashes_to_token_ids` confirmed present) vs vLLM's GPU-only
+prefix cache.
 
-## 🛑 Skipped: Scenario C — LMCache offloading
+| GPU KV cap | B: vLLM cache only (TTFT p50 / thr) | C: + LMCache (TTFT p50 / thr) | Gain |
+|---|---|---|---|
+| 3072 blocks | 855 ms / 1.18 req/s | **422 ms / 1.37 req/s** | **2.0× lower TTFT**, +16% thr |
+| 2560 blocks | 1426 ms / 0.92 req/s | **902 ms / 1.52 req/s** | 1.6× lower TTFT, **+65% thr** |
 
-LMCache 0.4.6 requires `transformers>=5.4`, which conflicts with the `transformers 4.x`
-that vLLM 0.11.0 (the version matching this pod's CUDA-12.8 driver) needs. On a small
-20-image workload that fits in GPU memory it would ≈ B anyway. Revisit with a
-vLLM-0.11-compatible LMCache version if we want the explicit offloading column.
+At 2560 blocks B's vLLM prefix-cache hit rate fell to ~41% (thrashing); LMCache's CPU
+offload kept the multimodal KV warm. **Honest framing:** ~1.5–2× — real and defensible,
+NOT the inflated "3–10×" vendor claims (which our research refuted). When the working set
+fits in GPU, vLLM's own cache suffices and C ≈ B; the gain appears under pressure.
+
+Raw JSON: `results/Bp.json`,`Cp.json` (3072), `Bp2.json`,`Cp2.json` (2560).
+
+## ⏳ Routing (Scenario D vs E): logic validated, GPU TTFT-delta deferred
+
+- **Routing logic validated on the mock fleet:** `prefix_kv_aware` achieved **99.2%
+  routing-affinity hit rate** and **balanced load (59/61)** across replicas — proving the
+  router sticks sessions to warm replicas without snowballing.
+- **GPU TTFT-delta not yet captured.** Two 7B replicas don't fit on one 48 GB A40 (weights
+  + activation leave no KV), and after many vLLM start/kill cycles the pod accumulated
+  un-killable orphan processes (zombie ports, vanishing /tmp files). **The right setup is a
+  fresh 2-GPU pod (one replica per GPU)** — clean, realistic for cross-replica routing, and
+  free of single-GPU cramming. Deferred to that environment.
 
 ---
 

@@ -1,0 +1,33 @@
+{
+  "args": {
+    "host": "http://localhost:8000",
+    "model": "llava-hf/llava-onevision-qwen2-7b-ov-hf",
+    "images": 40,
+    "images_dir": "images",
+    "sessions": 80,
+    "turns": 1,
+    "revisit_ratio": 0.7,
+    "concurrency": 4,
+    "seed": 1234,
+    "out": "/root/infergate/Bp.json"
+  },
+  "summary": {
+    "requests": 80,
+    "succeeded": 80,
+    "failed": 0,
+    "wall_s": 67.64,
+    "throughput_rps": 1.18,
+    "ttft_ms": {
+      "p50": 855.1,
+      "p95": 2544.8,
+      "p99": 2709.6
+    },
+    "e2e_ms": {
+      "p50": 2359.9,
+      "p95": 7845.8
+    },
+    "affinity_warm": 0,
+    "affinity_cold": 0,
+    "affinity_hit_rate": null
+  }
+}
