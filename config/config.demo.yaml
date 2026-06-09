@@ -1,0 +1,27 @@
+# Demo fleet for the dashboard screenshot: prefix_kv_aware routing + response
+# cache + rate limiting all ON, two mock replicas. No GPU needed.
+server: { host: 0.0.0.0, port: 8080 }
+cache:
+  enabled: true
+  backend: memory
+ratelimit:
+  enabled: true
+  default_rpm: 100000
+routing:
+  strategy: prefix_kv_aware
+  prefix_kv_aware:
+    block_size: 16
+    affinity_ttl_s: 600
+    weight_prefix: 1.0
+    weight_load: 0.5
+    max_inflight_skew: 4
+    image_key: bytes_sha256
+    cold_fallback: least_busy
+providers:
+  - { name: mock-r1, type: mock, latency_ms: 60, tokens_per_second: 800 }
+  - { name: mock-r2, type: mock, latency_ms: 60, tokens_per_second: 800 }
+models:
+  - name: demo
+    deployments:
+      - { provider: mock-r1, model: replica-1 }
+      - { provider: mock-r2, model: replica-2 }
