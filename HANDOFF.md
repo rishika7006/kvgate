@@ -57,8 +57,24 @@ kept multimodal KV warm. **Honest framing:** ~1.5–2× — real, NOT the inflat
 When the working set fits in GPU, C ≈ B (no pressure → no gain). Raw: `results/Bp.json`,
 `Cp.json` (3072), `Bp2.json`,`Cp2.json` (2560).
 
-### Routing (D vs E) — mock-validated only
-Mock fleet: `prefix_kv_aware` = 99.2% warm affinity, balanced 59/61. GPU run pending (§4).
+### Routing (D vs E) — CAPTURED on 2× A40 (one replica per GPU)
+12 distinct 1024² images, per-replica KV capped (`--num-gpu-blocks-override 3000`), 120 reqs, conc 8.
+
+| Metric | D round_robin | E prefix_kv_aware | Gain |
+|---|---|---|---|
+| TTFT p95 | 2783 ms | **1516 ms** | **1.84× (−45%)** |
+| TTFT p50 | 568 ms | **434 ms** | −24% |
+| Throughput | 2.69 req/s | **3.06 req/s** | +14% |
+| Load split | 72/72 | 73/71 | balanced |
+| Affinity | — | **98.6%** | — |
+
+Both scenarios balanced load → fair comparison. E cut tail TTFT ~half while staying balanced
+(load guard `max_inflight_skew:2` prevents snowball). Raw: `results/routing/{D,E}.json`.
+**Root cause of all earlier routing failures:** RunPod's **nginx squats on port 8001** →
+vLLM can't bind → `/health` answered by nginx → gateway circuit-broke r1 → all traffic to
+r2 → garbage comparison. Fixed by using ports **19001/19002/19080**, a per-replica smoke
+chat test before benchmarking, and a self-daemonizing launcher writing to `/root/igout`
+(NOT `/tmp` or `/workspace` — both misbehaved for detached writes).
 
 ---
 

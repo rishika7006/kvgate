@@ -23,7 +23,7 @@ Legend: ✅ done · �︎ in progress · ⬜ pending · ⭐ current focus
 
 ## B. Experiments / results
 - ✅ B1. LMCache **multimodal** offload GPU win (A40): ~2× TTFT, +65% throughput under memory pressure (`results/`, `RESULTS.md`)
-- ⭐�︎ B2. **Smart routing GPU benchmark (D round-robin vs E prefix_kv_aware)** on 2 GPUs — the headline routing number. *(blocked previously by RunPod orchestration flakiness; retry on higher-availability GPU + tmux-on-/workspace fix)*
+- ✅ B2. **Smart routing GPU benchmark (D round-robin vs E prefix_kv_aware)** on 2× A40 (one replica/GPU): **TTFT p95 2783 → 1516 ms (1.84×, −45%)**, throughput +14%, **98.6% affinity**, load balanced 73/71. Raw in `results/routing/`. *(root cause of earlier failures: RunPod's nginx squats on port 8001 → vLLM couldn't bind → traffic collapsed to one replica. Fixed by using ports 19001/19002/19080 + per-replica smoke test + self-daemonizing launcher writing to `/root/igout`.)*
 - ⬜ B3. Verify Next.js dashboard live against a running gateway w/ traffic → screenshot/GIF for README
 - ⬜ B4. Verify full `docker compose` stack (gateway+Redis+Prometheus+Grafana) → Grafana shows live InferGate panels → screenshot
 - ⬜ B5. Benchmark report doc with tables, methodology, honest caveats, and charts (matplotlib) generated from `results/`
@@ -63,7 +63,7 @@ Legend: ✅ done · �︎ in progress · ⬜ pending · ⭐ current focus
 ---
 
 ## Execution order (one-by-one)
-1. **B2 routing GPU** ⭐ → 2. B3 + B4 (dashboard/Grafana live + screenshots) → 3. B5 report →
+1. ~~B2 routing GPU~~ ✅ → 2. **B3 + B4 (dashboard/Grafana live + screenshots)** ⭐ → 3. B5 report →
 4. D1–D5 features → 5. C1 (vs Dynamo/Prod-Stack) → 6. C2 (OSS PR) → 7. E1–E9 hardening →
 8. F1–F4 launch → 9. **G1–G2 (post + résumé) LAST.**
 

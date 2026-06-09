@@ -1,0 +1,50 @@
+=== launcher start Tue Jun  9 02:39:23 UTC 2026 ===
+ports free: 0 still bound (want 0)
+#### starting replicas (one per GPU) ####
+replica :19001 up + smoke OK (GPU 0)
+replica :19002 up + smoke OK (GPU 1)
+both replicas up + smoke-tested
+#### Scenario D: round_robin ####
+Generated 120 requests (120 sessions x 1 turns; 12 real images from images).
+
+===== InferGate multimodal benchmark =====
+requests       : 120/120 ok (0 failed)
+wall clock     : 44.69s
+throughput     : 2.69 req/s
+TTFT  p50/p95/p99 (ms): 568.1 / 2783.4 / 3642.4
+E2E   p50/p95     (ms): 2473.2 / 6843.0
+==========================================
+
+Wrote /root/igout/D.json
+--- round_robin per-replica request split ---
+    r1 reqs 72
+    r2 reqs 72
+   affinity: 
+#### Scenario E: prefix_kv_aware ####
+/root/ig_route2gpu.sh: line 52:  7927 Killed                  nohup infergate run -c config/route.yaml --port 19080 > $W/gw.log 2>&1
+Generated 120 requests (120 sessions x 1 turns; 12 real images from images).
+
+===== InferGate multimodal benchmark =====
+requests       : 120/120 ok (0 failed)
+wall clock     : 39.27s
+throughput     : 3.06 req/s
+TTFT  p50/p95/p99 (ms): 433.8 / 1516.2 / 2661.6
+E2E   p50/p95     (ms): 1977.5 / 5319.9
+routing affinity: 98.6% warm (warm=142, cold=2)
+==========================================
+
+Wrote /root/igout/E.json
+--- prefix_kv_aware per-replica request split ---
+    r1 reqs 73
+    r2 reqs 71
+   affinity: infergate_routing_affinity_total{model="vlm",outcome="cold"} 2.0 infergate_routing_affinity_total{model="vlm",outcome="warm"} 142.0 
+#### RESULTS (2-GPU routing) ####
+| Scenario | TTFT p50 (ms) | TTFT p95 | TTFT p99 | Throughput (req/s) | Affinity hit % | OK/Total |
+|---|---|---|---|---|---|
+| D | 568.1 | 2783.4 | 3642.4 | 2.69 | — | 120/120 |
+| E | 433.8 | 1516.2 | 2661.6 | 3.06 | 98.6% | 120/120 |
+
+**Headline (D round-robin → E prefix_kv_aware):**
+- TTFT p95: 2783.4 ms → 1516.2 ms (+45.5%)
+- Routing affinity hit rate (E): 98.6%
+ALLDONE_ROUTE2

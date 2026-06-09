@@ -1,0 +1,34 @@
+{
+  "args": {
+    "host": "http://localhost:19080",
+    "model": "vlm",
+    "images": 12,
+    "images_dir": "images",
+    "sessions": 120,
+    "turns": 1,
+    "revisit_ratio": 0.7,
+    "concurrency": 8,
+    "seed": 1234,
+    "context_tokens": 0,
+    "out": "/root/igout/D.json"
+  },
+  "summary": {
+    "requests": 120,
+    "succeeded": 120,
+    "failed": 0,
+    "wall_s": 44.69,
+    "throughput_rps": 2.69,
+    "ttft_ms": {
+      "p50": 568.1,
+      "p95": 2783.4,
+      "p99": 3642.4
+    },
+    "e2e_ms": {
+      "p50": 2473.2,
+      "p95": 6843.0
+    },
+    "affinity_warm": 0,
+    "affinity_cold": 0,
+    "affinity_hit_rate": null
+  }
+}

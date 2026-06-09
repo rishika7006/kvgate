@@ -39,16 +39,36 @@ fits in GPU, vLLM's own cache suffices and C ≈ B; the gain appears under press
 
 Raw JSON: `results/Bp.json`,`Cp.json` (3072), `Bp2.json`,`Cp2.json` (2560).
 
-## ⏳ Routing (Scenario D vs E): logic validated, GPU TTFT-delta deferred
+## ✅ Captured: Smart routing (Scenario D vs E) on a 2-GPU fleet
 
-- **Routing logic validated on the mock fleet:** `prefix_kv_aware` achieved **99.2%
-  routing-affinity hit rate** and **balanced load (59/61)** across replicas — proving the
-  router sticks sessions to warm replicas without snowballing.
-- **GPU TTFT-delta not yet captured.** Two 7B replicas don't fit on one 48 GB A40 (weights
-  + activation leave no KV), and after many vLLM start/kill cycles the pod accumulated
-  un-killable orphan processes (zombie ports, vanishing /tmp files). **The right setup is a
-  fresh 2-GPU pod (one replica per GPU)** — clean, realistic for cross-replica routing, and
-  free of single-GPU cramming. Deferred to that environment.
+**The headline routing result.** Two `Llava-OneVision-7B` replicas, **one per GPU** (2× A40),
+each with its GPU KV cache capped (`--num-gpu-blocks-override 3000`) so the working set
+(12 distinct 1024×1024 images) overflows a single replica. 120 requests, concurrency 8.
+We compare the gateway's `round_robin` strategy (D) against `prefix_kv_aware` (E), which
+hashes each request's prefix (incl. the image bytes) and routes it to the replica that
+already holds that prefix warm — maximizing cross-replica KV reuse.
+
+| Metric | D: round_robin | E: prefix_kv_aware | Improvement |
+|---|---|---|---|
+| TTFT p50 | 568 ms | **434 ms** | −24% |
+| TTFT **p95** | 2,783 ms | **1,516 ms** | **1.84× lower (−45%)** |
+| TTFT p99 | 3,642 ms | **2,662 ms** | −27% |
+| Throughput | 2.69 req/s | **3.06 req/s** | **+14%** |
+| Per-replica split | 72 / 72 | 73 / 71 | balanced (no snowball) |
+| Routing-affinity hit rate | — | **98.6%** | — |
+
+**Takeaway:** prefix-aware routing cut tail TTFT (p95) nearly in half versus round-robin
+while keeping load **balanced** across both replicas — round-robin scatters each image
+across both GPUs (so each replica re-prefills ~6.5k vision tokens on a miss), whereas
+prefix-aware keeps each image's KV resident on one replica (98.6% warm hits). The load
+guard (`max_inflight_skew: 2`) is what preserves the 73/71 balance — affinity-first routing
+*without* it would snowball popular images onto one GPU.
+
+Raw JSON: `results/routing/D.json`, `results/routing/E.json`; full run log
+`results/routing/route2.out`.
+
+> Earlier mock-fleet validation (kept for reference): `prefix_kv_aware` hit **99.2%**
+> routing-affinity and balanced load 59/61 — consistent with the on-GPU result above.
 
 ---
 
