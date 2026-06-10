@@ -41,17 +41,33 @@ export const LMCACHE = {
   vllmPrefixHitCollapse: 0.41,
 };
 
-// ---- Direct CPU-offload proof (filled from the dedicated stat-logging GPU run) ----
-// Until that run lands, this stays null and the UI shows the config + "measuring" note.
-export type MemoryProof = {
-  gpuKvTokens: number;       // GPU KV capacity at the cap
-  cpuKvBytesUsed: number;    // bytes LMCache actually stored to CPU RAM
-  cpuRamBeforeMb: number;
-  cpuRamAfterMb: number;
-  kvStoredTokens: number;
-  kvRetrievedTokens: number;
+// ---- KV-offload hierarchy: where does the KV live? (measured, single A40) ----
+// Same workload (40 distinct 1024px images, 80 reqs, GPU KV capped to 2560 blocks), three
+// LMCache configs run back-to-back. Honest framing: CPU offload is the latency win; Redis is
+// NOT faster (loopback here) — its value is capacity + cross-host KV sharing (the AWS pattern).
+export const OFFLOAD = {
+  setup:
+    "Single A40, Llava-OneVision-7B, 40 distinct 1024×1024 images, 80 requests, GPU KV capped " +
+    "(--num-gpu-blocks-override 2560). Three LMCache configs, same workload.",
+  tiers: [
+    { key: "control", label: "GPU only (baseline)", dest: "recompute on evict", ttftP50: 1393, ttftP95: 2583, thr: 1.11, memLabel: "—", mem: null },
+    { key: "cpu", label: "+ LMCache → CPU RAM", dest: "local_cpu: true", ttftP50: 249, ttftP95: 412, thr: 2.33, memLabel: "CPU RAM +35 GB", mem: "cpu" },
+    { key: "redis", label: "+ LMCache → Redis (direct)", dest: "local_cpu: false", ttftP50: 1424, ttftP95: 2686, thr: 1.08, memLabel: "Redis +4.7 GB", mem: "redis" },
+  ],
+  // direct evidence the offload tiers actually used the storage
+  proof: {
+    cpuRamDeltaMb: 34950,     // CPU RAM rose ~35 GB when offloading to CPU
+    redisDeltaMb: 4739,       // Redis used_memory: 1 MB -> 4740 MB when offloading to Redis
+    storeThroughputGbs: 12.7, // LMCache logged store throughput
+    retrieveThroughputGbs: 22.1,
+    cpuTtftSpeedup: 5.6,      // 1393 -> 249 ms
+    cpuThrSpeedup: 2.1,       // 1.11 -> 2.33 req/s
+  },
+  takeaway:
+    "CPU offload cut TTFT 5.6× and doubled throughput, consuming ~35 GB of CPU RAM (LMCache " +
+    "logged ~13–22 GB/s store/retrieve). Redis stored 4.7 GB of KV remotely — proving the " +
+    "cross-host tier — but on loopback it's not a latency win; its value is capacity + sharing.",
 };
-export const MEMORY_PROOF: MemoryProof | null = null;
 
 export const ARCH = {
   stack: ["FastAPI", "vLLM 0.11", "LMCache 0.3.7", "Redis", "Prometheus", "Grafana", "Next.js 14", "Docker"],

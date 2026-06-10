@@ -73,7 +73,36 @@ and **C ≈ B (no gain)** — the win only appears under pressure.
 
 ---
 
-## 3. Reproducing
+## 3. KV-offload hierarchy — where does the KV live? (CPU vs Redis)
+
+**Setup.** Single A40, same model, 40 distinct 1024×1024 images, 80 requests, GPU KV capped
+(`--num-gpu-blocks-override 2560`). Three LMCache configs run back-to-back — KV offloaded to
+**nowhere** (baseline), to **CPU RAM** (`local_cpu: true`), or **directly to Redis**
+(`local_cpu: false`, `remote_url: redis://…`). LMCache's tiers are independent, so Redis is a
+*direct* GPU→Redis target, not a forced GPU→CPU→Redis chain.
+
+| Config | KV destination | TTFT p50 | TTFT p95 | Throughput | Memory used (direct proof) |
+|---|---|---|---|---|---|
+| control | GPU only (recompute) | 1393 ms | 2583 ms | 1.11 req/s | — |
+| **+ LMCache → CPU** | CPU RAM | **249 ms** | **412 ms** | **2.33 req/s** | **CPU RAM +35 GB** |
+| + LMCache → Redis | Redis (direct) | 1424 ms | 2686 ms | 1.08 req/s | **Redis used_memory +4.7 GB** |
+
+**Direct evidence the offload actually happened** (not just faster numbers):
+- **CPU tier:** system RAM rose **~35 GB** during the run, and LMCache logged every transfer:
+  `Stored 2048 tokens … 12.7 GB/s; Retrieved 4151 tokens … 22.1 GB/s`.
+- **Redis tier:** Redis `used_memory` went **1 MB → 4740 MB** — the KV is provably living in Redis.
+
+**Takeaway (honest).** CPU offload is the **latency win** — 5.6× lower TTFT, 2.1× throughput —
+because recovering KV from pinned CPU RAM (~22 GB/s) beats recomputing ~6.5k vision tokens.
+**Redis is *not* a latency win** (1424 ms ≈ baseline): here Redis runs on loopback, so
+serialization + transfer roughly cancels the recompute saving. Its value is **capacity and
+cross-host/replica KV sharing** — the same pattern as the AWS-internship Redis KV store — not
+speed. Reported as measured; we don't dress Redis up as something it isn't.
+
+> Raw: `results/offload/{control,cpu,redis}.json`, full run log `results/offload/cpuproof.out`,
+> LMCache transfer logs `results/offload/cpu.log`.
+
+## 4. Reproducing
 
 ```bash
 # charts (from the raw JSONs already in results/)

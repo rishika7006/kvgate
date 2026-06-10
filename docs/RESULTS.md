@@ -39,6 +39,22 @@ fits in GPU, vLLM's own cache suffices and C ≈ B; the gain appears under press
 
 Raw JSON: `results/Bp.json`,`Cp.json` (3072), `Bp2.json`,`Cp2.json` (2560).
 
+## ✅ Captured: KV-offload hierarchy — CPU vs Redis (where the KV lives)
+
+Single A40, 40 images, 80 reqs, GPU KV capped to 2560 blocks. Three LMCache configs:
+
+| Config | KV destination | TTFT p50 | Throughput | Direct memory proof |
+|---|---|---|---|---|
+| control | GPU only | 1393 ms | 1.11 req/s | — |
+| **+ LMCache → CPU** | CPU RAM | **249 ms** | **2.33 req/s** | **CPU RAM +35 GB** |
+| + LMCache → Redis | Redis (direct, `local_cpu:false`) | 1424 ms | 1.08 req/s | **Redis +4.7 GB** |
+
+CPU offload: **5.6× lower TTFT, 2.1× throughput**; LMCache logged store ~13 GB/s, retrieve
+~22 GB/s. Redis: stored 4.7 GB of KV (1 MB→4740 MB) — cross-host tier works — but **not** a
+latency win on loopback (its value is capacity + cross-host sharing, the AWS pattern). Raw:
+`results/offload/{control,cpu,redis}.json`, `cpuproof.out`, `cpu.log`. Full report:
+[`docs/BENCHMARK_REPORT.md`](BENCHMARK_REPORT.md).
+
 ## ✅ Captured: Smart routing (Scenario D vs E) on a 2-GPU fleet
 
 **The headline routing result.** Two `Llava-OneVision-7B` replicas, **one per GPU** (2× A40),

@@ -1,4 +1,4 @@
-import { ARCH, HEADLINES, LMCACHE, MEMORY_PROOF, ROUTING } from "@/lib/results";
+import { ARCH, HEADLINES, LMCACHE, OFFLOAD, ROUTING } from "@/lib/results";
 import { Delta, GroupedBars, Panel } from "@/components/charts";
 
 const GREY = "#94a3b8";
@@ -106,28 +106,49 @@ export function Results() {
         </p>
       </Panel>
 
-      {/* Memory proof */}
-      <Panel kicker="Evidence" title="Proof: CPU memory carries the offloaded KV">
-        {MEMORY_PROOF ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Stat label="GPU KV capacity" value={`${(MEMORY_PROOF.gpuKvTokens / 1000).toFixed(0)}k tok`} />
-            <Stat label="KV stored to CPU" value={`${(MEMORY_PROOF.cpuKvBytesUsed / 1e9).toFixed(2)} GB`} tone="sky" />
-            <Stat label="CPU RAM Δ during run" value={`+${MEMORY_PROOF.cpuRamAfterMb - MEMORY_PROOF.cpuRamBeforeMb} MB`} tone="sky" />
-            <Stat label="KV retrieved from CPU" value={`${(MEMORY_PROOF.kvRetrievedTokens / 1000).toFixed(0)}k tok`} tone="good" />
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-edge bg-ink/30 p-5 text-sm text-slate-400">
-            <p className="mb-2">
-              GPU KV is intentionally capped (<code className="text-slate-300">--num-gpu-blocks-override</code>),
-              and LMCache spills the overflow KV to CPU RAM (<code className="text-slate-300">max_local_cpu_size: 30 GB</code>).
-              The faster TTFT above is itself the effect of recovering that KV from CPU instead of recomputing it.
-            </p>
-            <p className="text-xs text-slate-500">
-              Direct counters (CPU bytes stored, KV hit/miss, CPU-RAM delta) are captured in a
-              dedicated stat-logging run and will populate this panel.
-            </p>
-          </div>
-        )}
+      {/* KV offload hierarchy — where does the KV live? */}
+      <Panel kicker="Experiment 3 · KV offload hierarchy" title="Where does the offloaded KV live? CPU vs Redis">
+        <p className="mb-5 text-sm leading-relaxed text-slate-400">{OFFLOAD.setup}</p>
+        <div className="overflow-hidden rounded-xl border border-edge">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-800/40 text-left text-xs uppercase tracking-wider text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Config</th>
+                <th className="px-4 py-3">TTFT p50</th>
+                <th className="px-4 py-3">TTFT p95</th>
+                <th className="px-4 py-3">Throughput</th>
+                <th className="px-4 py-3">Memory used (proof)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-edge">
+              {OFFLOAD.tiers.map((t) => (
+                <tr key={t.key} className={t.key === "cpu" ? "bg-emerald-500/5" : ""}>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-slate-100">{t.label}</div>
+                    <div className="text-xs text-slate-500">{t.dest}</div>
+                  </td>
+                  <td className={`px-4 py-3 tabular-nums ${t.key === "cpu" ? "font-bold text-emerald-400" : "text-slate-200"}`}>{t.ttftP50} ms</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-300">{t.ttftP95} ms</td>
+                  <td className={`px-4 py-3 tabular-nums ${t.key === "cpu" ? "font-bold text-emerald-400" : "text-slate-300"}`}>{t.thr} req/s</td>
+                  <td className="px-4 py-3">
+                    {t.mem ? (
+                      <span className="rounded-full bg-sky-500/15 px-2.5 py-1 text-xs font-semibold text-sky-300 ring-1 ring-sky-500/30">{t.memLabel}</span>
+                    ) : (
+                      <span className="text-xs text-slate-500">{t.memLabel}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Stat label="CPU offload — TTFT" value={`${OFFLOAD.proof.cpuTtftSpeedup}× lower`} tone="good" />
+          <Stat label="CPU offload — throughput" value={`${OFFLOAD.proof.cpuThrSpeedup}× higher`} tone="good" />
+          <Stat label="KV stored in Redis" value={`+${(OFFLOAD.proof.redisDeltaMb / 1024).toFixed(1)} GB`} tone="sky" />
+          <Stat label="LMCache retrieve" value={`${OFFLOAD.proof.retrieveThroughputGbs} GB/s`} tone="sky" />
+        </div>
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">{OFFLOAD.takeaway}</p>
       </Panel>
 
       {/* Architecture */}

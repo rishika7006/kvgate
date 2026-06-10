@@ -1,0 +1,89 @@
+PONG
+######## control ########
+control CPU_RAM_before_MB=134601 REDIS_before_MB=1
+control up.
+Generated 80 requests (80 sessions x 1 turns; 40 real images from images).
+
+===== InferGate multimodal benchmark =====
+requests       : 80/80 ok (0 failed)
+wall clock     : 72.15s
+throughput     : 1.11 req/s
+TTFT  p50/p95/p99 (ms): 1392.5 / 2582.7 / 2703.3
+E2E   p50/p95     (ms): 3121.4 / 6603.2
+==========================================
+
+Wrote /root/igout/control.json
+control CPU_RAM_after_MB=156465 CPU_RAM_DELTA_MB=21864
+control REDIS_after_MB=1 REDIS_DELTA_MB=0
+control vllm_prefix_metrics: vllm:prefix_cache_queries_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.245335e+06 vllm:prefix_cache_queries_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.7811229848694417e+09 vllm:prefix_cache_hits_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 600208.0 vllm:prefix_cache_hits_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.7811229848695006e+09 
+control LMCache_loglines:
+[1;36m(EngineCore_DP0 pid=7119)[0;0m INFO 06-10 20:22:49 [core.py:77] Initializing a V1 LLM engine (v0.11.0) with config: model='llava-hf/llava-onevision-qwen2-7b-ov-hf', speculative_config=None, tokenizer='llava-hf/llava-onevision-qwen2-7b-ov-hf', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=16384, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=llava-hf/llava-onevision-qwen2-7b-ov-hf, enable_prefix_caching=True, chunked_prefill_enabled=True, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":null,"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"cudagraph_mode":0,"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"use_inductor_graph_partition":false,"pass_config":{},"max_capture_size":0,"local_cache_dir":null}
+######## cpu ########
+/root/infergate/scripts/ig_cpuproof.sh: line 51:  6862 Killed                  nohup env LMCACHE_LOG_LEVEL=DEBUG CUDA_VISIBLE_DEVICES=0 "${cfg_env[@]}" vllm serve $MODEL --port $PORT --enforce-eager --gpu-memory-utilization 0.9 --max-model-len 16384 --num-gpu-blocks-override $BLOCKS $flags > $W/$1.log 2>&1
+cpu CPU_RAM_before_MB=153824 REDIS_before_MB=1
+cpu up.
+Generated 80 requests (80 sessions x 1 turns; 40 real images from images).
+
+===== InferGate multimodal benchmark =====
+requests       : 80/80 ok (0 failed)
+wall clock     : 34.29s
+throughput     : 2.33 req/s
+TTFT  p50/p95/p99 (ms): 248.6 / 411.8 / 1625.3
+E2E   p50/p95     (ms): 1192.9 / 3935.8
+==========================================
+
+Wrote /root/igout/cpu.json
+cpu CPU_RAM_after_MB=188774 CPU_RAM_DELTA_MB=34950
+cpu REDIS_after_MB=1 REDIS_DELTA_MB=0
+cpu vllm_prefix_metrics: vllm:prefix_cache_queries_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.2376e+06 vllm:prefix_cache_queries_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.7811232098709602e+09 vllm:prefix_cache_hits_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 608640.0 vllm:prefix_cache_hits_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.78112320987098e+09 
+cpu LMCache_loglines:
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [32;20m[2026-06-10 20:28:35,961] LMCache INFO:[0m Stored 2048 out of total 2048 tokens. size: 0.1094 gb, cost 7.2990 ms, throughput: 14.9849 GB/s; offload_time: 7.2660 ms, put_time: 0.0330 ms [3m(cache_engine.py:288:lmcache.v1.cache_engine)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [32;20m[2026-06-10 20:28:35,966] LMCache INFO:[0m Reqid: chatcmpl-a988f7219297480d9de77571d18426ed, Total tokens 7735, LMCache hit tokens: 7735, need to load: 4006 [3m(vllm_v1_adapter.py:1191:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [32;20m[2026-06-10 20:28:35,981] LMCache INFO:[0m Retrieved 4151 out of 4151 required tokens (from 7735 total tokens). size: 0.2217 gb, cost 10.0260 ms, throughput: 22.1112 GB/s; [3m(cache_engine.py:509:lmcache.v1.cache_engine)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [1m[2026-06-10 20:28:36,199] LMCache DEBUG:[0m Allocating memory in local cpu backend with busy loop: None [3m(local_cpu_backend.py:322:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=7969)[0;0m [32;20m[2026-06-10 20:28:36,204] LMCache INFO:[0m Stored 1335 out of total 1335 tokens. size: 0.0713 gb, cost 4.8825 ms, throughput: 14.6024 GB/s; offload_time: 4.8614 ms, put_time: 0.0211 ms [3m(cache_engine.py:288:lmcache.v1.cache_engine)[0m
+######## redis ########
+/root/infergate/scripts/ig_cpuproof.sh: line 51:  7712 Killed                  nohup env LMCACHE_LOG_LEVEL=DEBUG CUDA_VISIBLE_DEVICES=0 "${cfg_env[@]}" vllm serve $MODEL --port $PORT --enforce-eager --gpu-memory-utilization 0.9 --max-model-len 16384 --num-gpu-blocks-override $BLOCKS $flags > $W/$1.log 2>&1
+redis CPU_RAM_before_MB=154909 REDIS_before_MB=1
+redis up.
+Generated 80 requests (80 sessions x 1 turns; 40 real images from images).
+
+===== InferGate multimodal benchmark =====
+requests       : 80/80 ok (0 failed)
+wall clock     : 73.99s
+throughput     : 1.08 req/s
+TTFT  p50/p95/p99 (ms): 1423.7 / 2686.0 / 2755.3
+E2E   p50/p95     (ms): 3182.0 / 7584.0
+==========================================
+
+Wrote /root/igout/redis.json
+redis CPU_RAM_after_MB=142234 CPU_RAM_DELTA_MB=-12675
+redis REDIS_after_MB=4740 REDIS_DELTA_MB=4739
+redis vllm_prefix_metrics: vllm:prefix_cache_queries_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.245335e+06 vllm:prefix_cache_queries_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.7811233636517875e+09 vllm:prefix_cache_hits_total{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 580656.0 vllm:prefix_cache_hits_created{engine="0",model_name="llava-hf/llava-onevision-qwen2-7b-ov-hf"} 1.7811233636518114e+09 
+redis LMCache_loglines:
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [1m[2026-06-10 20:32:25,138] LMCache DEBUG:[0m Unable to allocate memory object after 1379 attempts of local cpu backend allocate() [3m(local_cpu_backend.py:390:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [33;20m[2026-06-10 20:32:25,138] LMCache WARNING:[0m No eviction candidates found in local cpu backend. Local cpu memory is under pressure. Waiting for 0.1 seconds before retrying. [3m(local_cpu_backend.py:376:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [1m[2026-06-10 20:32:25,239] LMCache DEBUG:[0m Unable to allocate memory object after 1380 attempts of local cpu backend allocate() [3m(local_cpu_backend.py:390:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [33;20m[2026-06-10 20:32:25,239] LMCache WARNING:[0m No eviction candidates found in local cpu backend. Local cpu memory is under pressure. Waiting for 0.1 seconds before retrying. [3m(local_cpu_backend.py:376:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [1m[2026-06-10 20:32:25,340] LMCache DEBUG:[0m Unable to allocate memory object after 1381 attempts of local cpu backend allocate() [3m(local_cpu_backend.py:390:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [33;20m[2026-06-10 20:32:25,340] LMCache WARNING:[0m No eviction candidates found in local cpu backend. Local cpu memory is under pressure. Waiting for 0.1 seconds before retrying. [3m(local_cpu_backend.py:376:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [1m[2026-06-10 20:32:25,440] LMCache DEBUG:[0m Unable to allocate memory object after 1382 attempts of local cpu backend allocate() [3m(local_cpu_backend.py:390:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [33;20m[2026-06-10 20:32:25,440] LMCache WARNING:[0m No eviction candidates found in local cpu backend. Local cpu memory is under pressure. Waiting for 0.1 seconds before retrying. [3m(local_cpu_backend.py:376:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [1m[2026-06-10 20:32:25,541] LMCache DEBUG:[0m Unable to allocate memory object after 1383 attempts of local cpu backend allocate() [3m(local_cpu_backend.py:390:lmcache.v1.storage_backend.local_cpu_backend)[0m
+[1;36m(EngineCore_DP0 pid=8889)[0;0m [33;20m[2026-06-10 20:32:25,541] LMCache WARNING:[0m No eviction candidates found in local cpu backend. Local cpu memory is under pressure. Waiting for 0.1 seconds before retrying. [3m(local_cpu_backend.py:376:lmcache.v1.storage_backend.local_cpu_backend)[0m
+######## SUMMARY (where does the KV live?) ########
+Expect: cpu CPU_RAM_DELTA >> control (KV in CPU RAM); redis REDIS_DELTA > 0 (KV in Redis);
+cpu TTFT < control TTFT under pressure. redis TTFT: loopback-optimistic — value is
+capacity + cross-host sharing, not a latency win over cpu. Report numbers as measured.
+| Scenario | TTFT p50 (ms) | TTFT p95 | TTFT p99 | Throughput (req/s) | Affinity hit % | OK/Total |
+|---|---|---|---|---|---|
+| control | 1392.5 | 2582.7 | 2703.3 | 1.11 | — | 80/80 |
+| cpu | 248.6 | 411.8 | 1625.3 | 2.33 | — | 80/80 |
+| redis | 1423.7 | 2686.0 | 2755.3 | 1.08 | — | 80/80 |
+
+ALLDONE_CPUPROOF

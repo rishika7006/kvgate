@@ -55,10 +55,11 @@ run_one(){  # $1 label  $2 lmcache_cfg_or_empty
   redis-cli flushall >/dev/null 2>&1
   local cpu_before=$(free_mb) redis_before=$(redis_mb)
   echo "$1 CPU_RAM_before_MB=$cpu_before REDIS_before_MB=$redis_before"
-  local env_cfg="" flags=""
-  if [ -n "$2" ]; then env_cfg="LMCACHE_CONFIG_FILE=$2"; flags="$KVCFG"; fi
-  LMCACHE_LOG_LEVEL=DEBUG CUDA_VISIBLE_DEVICES=0 $env_cfg \
-    nohup vllm serve $MODEL --port $PORT --enforce-eager --gpu-memory-utilization 0.9 \
+  local cfg_env=() flags=""
+  if [ -n "$2" ]; then cfg_env=(LMCACHE_CONFIG_FILE="$2"); flags="$KVCFG"; fi
+  # use `env` so VAR=val coming from variable/array expansion is treated as an assignment
+  nohup env LMCACHE_LOG_LEVEL=DEBUG CUDA_VISIBLE_DEVICES=0 "${cfg_env[@]}" \
+    vllm serve $MODEL --port $PORT --enforce-eager --gpu-memory-utilization 0.9 \
     --max-model-len 16384 --num-gpu-blocks-override $BLOCKS $flags > $W/$1.log 2>&1 &
   wait_url http://localhost:$PORT/health || { echo "!! $1 FAILED to start"; grep -iE 'error|address|memory|redis|lmcache' $W/$1.log | tail -10; return 1; }
   echo "$1 up."
