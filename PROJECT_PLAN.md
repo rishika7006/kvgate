@@ -8,6 +8,17 @@ Legend: ✅ done · �︎ in progress · ⬜ pending · ⭐ current focus
 
 ---
 
+## Status snapshot (2026-06-10)
+**Done + pushed (CI green):** B2 routing GPU win · B3 dashboard · B5 report+charts ·
+**dashboard rebuilt as Results showcase + Live tab** · README leads with results ·
+Vercel static-export + deploy docs · **D1 Redis distributed routing** (+tests) ·
+F1 README · F2 OSS templates · F3 CI green · repo URLs fixed to rishika7006.
+**Blocked on user:** CPU-offload proof GPU run (needs pod SSH) · Vercel deploy (connect repo) ·
+F4 go public (gate) · G1/G2 post+résumé (LAST).
+**Optional/deferred:** B4 docker+Grafana shot · C1 vs Dynamo · C2 OSS PR · D2–D5 · E-series.
+
+---
+
 ## A. Core build (original scope) — DONE
 - ✅ A1. Core OpenAI-compatible gateway (FastAPI): `/v1/chat/completions` (stream+block), `/v1/models`, health, `/metrics`, `/admin/stats`
 - ✅ A2. Providers: mock, openai, openai_compatible (vLLM), anthropic
