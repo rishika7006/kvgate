@@ -18,12 +18,12 @@ export function Results() {
     <div className="space-y-8">
       {/* Hero */}
       <section className="rounded-3xl border border-edge bg-gradient-to-br from-panel/80 to-panel/40 p-8">
-        <h2 className="max-w-3xl text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
+        <h2 className="text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
           Cutting multimodal LLM latency with{" "}
           <span className="text-sky-400">KV-cache offload</span> and{" "}
           <span className="text-emerald-400">prefix-aware routing</span>
         </h2>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
+        <p className="mt-4 text-sm leading-relaxed text-slate-400">
           An open-source, OpenAI-compatible inference gateway in front of a vLLM fleet,
           benchmarked on a 7B vision-language model.
         </p>

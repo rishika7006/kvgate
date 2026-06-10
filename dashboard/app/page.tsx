@@ -8,11 +8,14 @@ import { CONTACT } from "@/lib/results";
 type Tab = "results" | "live";
 
 function LogoMark() {
+  // A gateway routing one request out to a replica fleet: input node fans out to two nodes.
   return (
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden className="shrink-0">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden className="shrink-0">
       <rect x="2" y="2" width="28" height="28" rx="8" stroke="#38bdf8" strokeWidth="2" />
-      <path d="M11 9v14M21 9v14" stroke="#34d399" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M11 16h10" stroke="#34d399" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M11.5 16h3M16 16l4.5-5M16 16l4.5 5" stroke="#64748b" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="10" cy="16" r="2.6" fill="#34d399" />
+      <circle cx="22" cy="11" r="2.6" fill="#38bdf8" />
+      <circle cx="22" cy="21" r="2.6" fill="#38bdf8" />
     </svg>
   );
 }
