@@ -76,6 +76,7 @@ export const CONTACT = {
   email: "rishika.vaish@utdallas.edu",
   linkedin: "https://www.linkedin.com/in/rishika-vaish",
   github: "https://github.com/rishika7006",
+  repo: "https://github.com/rishika7006/infergate",
 };
 
 export const ARCH = {
