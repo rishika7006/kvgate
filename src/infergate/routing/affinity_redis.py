@@ -26,7 +26,11 @@ colocated Redis; the in-memory backend remains the default for single-replica de
 from __future__ import annotations
 
 import time
-from typing import List, Optional
+from typing import List, Mapping, Optional, Union, cast
+
+# redis's hset(mapping=...) accepts this field/value union; its Mapping key type is
+# invariant, so a plain dict[str, float] needs a cast to satisfy the stubs.
+_RedisMapping = Mapping[Union[str, bytes, int, float], Union[str, bytes, int, float]]
 
 
 class RedisPrefixAffinityIndex:
@@ -84,7 +88,7 @@ class RedisPrefixAffinityIndex:
             return
         now = self._now() if now is None else now
         key = self._key(replica)
-        mapping = dict.fromkeys(chain, now)
+        mapping = cast(_RedisMapping, dict.fromkeys(chain, now))
         pipe = self._redis.pipeline(transaction=False)
         pipe.hset(key, mapping=mapping)
         if self.ttl_s > 0:
