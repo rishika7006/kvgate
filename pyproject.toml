@@ -80,6 +80,8 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+# runtime supports 3.9+ (see requires-python); mypy itself dropped 3.9 as a target,
+# so type-check against 3.10 semantics — safe for the 3.9 runtime.
+python_version = "3.10"
 ignore_missing_imports = true
 warn_unused_ignores = false

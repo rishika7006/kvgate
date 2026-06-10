@@ -7,7 +7,7 @@ reuse pattern used in high-throughput LLM serving.) Requires the ``redis`` extra
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, cast
 
 from .base import KVStore
 
@@ -24,7 +24,9 @@ class RedisKVStore(KVStore):
         self._redis = redis.from_url(url, decode_responses=True)
 
     async def get(self, key: str) -> Optional[str]:
-        return await self._redis.get(key)
+        # decode_responses=True means values come back as str; the redis stubs widen
+        # the return type to bytes|str|None, so narrow it here.
+        return cast(Optional[str], await self._redis.get(key))
 
     async def set(self, key: str, value: str, ttl_seconds: int) -> None:
         if ttl_seconds > 0:
