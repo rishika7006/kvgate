@@ -47,9 +47,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/rishabhvaish/infergate"
-Repository = "https://github.com/rishabhvaish/infergate"
-Issues = "https://github.com/rishabhvaish/infergate/issues"
+Homepage = "https://github.com/rishika7006/infergate"
+Repository = "https://github.com/rishika7006/infergate"
+Issues = "https://github.com/rishika7006/infergate/issues"
 
 [project.scripts]
 infergate = "infergate.cli:main"

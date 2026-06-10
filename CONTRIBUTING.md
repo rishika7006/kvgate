@@ -6,7 +6,7 @@ welcome — bug reports, docs, new providers, routing strategies, and tests.
 ## Development setup
 
 ```bash
-git clone https://github.com/rishabhvaish/infergate.git
+git clone https://github.com/rishika7006/infergate.git
 cd infergate
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,redis]"

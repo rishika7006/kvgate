@@ -4,7 +4,7 @@
 
 **An OpenAI-compatible LLM inference gateway — smart routing, semantic caching, rate limiting, and full observability.**
 
-[![CI](https://github.com/rishabhvaish/infergate/actions/workflows/ci.yml/badge.svg)](https://github.com/rishabhvaish/infergate/actions/workflows/ci.yml)
+[![CI](https://github.com/rishika7006/infergate/actions/workflows/ci.yml/badge.svg)](https://github.com/rishika7006/infergate/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/lint-ruff-orange.svg)](https://github.com/astral-sh/ruff)
@@ -14,6 +14,34 @@
 InferGate sits in front of your LLM backends — self-hosted **vLLM**/**TGI** servers and hosted APIs like **OpenAI** and **Anthropic** — and gives you one OpenAI-compatible endpoint with the production concerns already handled: **routing across backends, exact + semantic caching, per-tenant rate limiting, circuit breaking, and Prometheus/Grafana observability.**
 
 > It runs **out of the box with zero API keys** thanks to a built-in deterministic mock provider, so you can clone, start, stream, and load-test in under a minute.
+
+---
+
+## 📊 Results (real, measured on GPU)
+
+Benchmarked on **Llava-OneVision-7B** (a vision-language model) on rented A40 GPUs. **Honest numbers — no inflated vendor claims.** Full methodology + caveats in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md).
+
+| | Result | Setup |
+|---|---|---|
+| 🧠 **Prefix-aware routing** | **1.84× lower tail latency** (TTFT p95 2783 → 1516 ms), +14% throughput, **98.6%** affinity, load stays balanced | 2× A40, one replica per GPU, 12 images, KV capped |
+| ⚡ **LMCache CPU KV offload** | **up to 2.0× lower TTFT**, **+65% throughput** under memory pressure | 1× A40, working set overflows GPU KV |
+
+<p align="center">
+  <img src="docs/assets/routing_ttft.png" width="48%" alt="Smart routing TTFT before/after" />
+  <img src="docs/assets/lmcache_ttft.png" width="48%" alt="LMCache TTFT + throughput before/after" />
+</p>
+
+**Why it works:** round-robin scatters each image across GPUs so replicas keep re-prefilling ~6.5k vision tokens; prefix-aware routing keeps each image's KV resident on one replica (with a load guard so popular prompts don't snowball). LMCache spills overflow KV to CPU RAM and recovers it faster than recomputing it — the win appears only under memory pressure (honest: when the working set fits in GPU, there's no gain). This extends my AWS-internship work on KV-offload, generalized into a routing-aware gateway.
+
+### Interactive results dashboard
+
+A Next.js dashboard renders these experiments as before/after charts (plus a live-ops tab):
+
+<p align="center"><img src="docs/assets/dashboard.png" width="80%" alt="InferGate results dashboard" /></p>
+
+```bash
+cd dashboard && npm install && npm run dev   # http://localhost:3000
+```
 
 ---
 
@@ -80,7 +108,7 @@ Stack, NVIDIA Dynamo, llm-d). Full explanation + honest comparison:
 ## Quickstart (no API keys needed)
 
 ```bash
-git clone https://github.com/rishabhvaish/infergate.git
+git clone https://github.com/rishika7006/infergate.git
 cd infergate
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
@@ -222,7 +250,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Roadmap
 
 - [x] Multimodal KV/prefix-aware routing (`prefix_kv_aware`) — image-hash-aware affinity
-- [x] Next.js live dashboard — routing state, cache + KV-affinity hit rates ([`dashboard/`](dashboard/))
+- [x] GPU benchmarks: routing (1.84× lower p95) + LMCache offload (up to 2× lower TTFT) ([`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md))
+- [x] Next.js results dashboard — before/after charts + live-ops view ([`dashboard/`](dashboard/))
 - [ ] Redis-backed affinity index for cross-gateway-replica prefix routing
 - [ ] Redis-backed semantic index for cross-replica semantic cache
 - [ ] Streaming failover mid-response

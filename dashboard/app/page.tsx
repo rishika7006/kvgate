@@ -50,7 +50,7 @@ export default function Dashboard() {
       {tab === "results" ? <Results /> : <Live />}
 
       <footer className="mt-12 text-center text-xs text-slate-600">
-        Open-source · MIT · numbers are real measurements — see{" "}
+        Open-source · Apache 2.0 · numbers are real measurements — see{" "}
         <code>docs/BENCHMARK_REPORT.md</code>
       </footer>
     </main>
