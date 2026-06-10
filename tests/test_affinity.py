@@ -48,8 +48,15 @@ def test_build_memory_backend():
     assert isinstance(idx, PrefixAffinityIndex)
 
 
-def test_build_redis_backend_not_implemented():
-    import pytest
+def test_build_redis_backend(monkeypatch):
+    # redis backend is now implemented; see tests/test_affinity_redis.py for behavior.
+    import fakeredis
 
-    with pytest.raises(NotImplementedError):
-        build_affinity_index(PrefixKvAwareSettings(affinity_backend="redis"))
+    def fake_from_url(url, decode_responses=False):
+        return fakeredis.FakeStrictRedis(decode_responses=decode_responses)
+
+    monkeypatch.setattr("redis.from_url", fake_from_url)
+    from infergate.routing.affinity_redis import RedisPrefixAffinityIndex
+
+    idx = build_affinity_index(PrefixKvAwareSettings(affinity_backend="redis"))
+    assert isinstance(idx, RedisPrefixAffinityIndex)

@@ -82,6 +82,9 @@ class PrefixKvAwareSettings(BaseModel):
 
     block_size: int = 16
     affinity_backend: Literal["memory", "redis"] = "memory"
+    # Redis URL for the shared (cross-gateway-replica) affinity index. Supports ${ENV}
+    # expansion. Only used when affinity_backend == "redis".
+    affinity_redis_url: str = "redis://localhost:6379/0"
     affinity_ttl_s: float = 300.0
     max_blocks_per_replica: int = 200_000
     weight_prefix: float = 1.0  # reward for each matched (warm) prefix block

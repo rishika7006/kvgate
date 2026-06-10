@@ -13,7 +13,17 @@ from __future__ import annotations
 
 import time
 from collections import OrderedDict, defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Protocol
+
+
+class AffinityIndex(Protocol):
+    """Shared interface of the in-memory and Redis prefix-affinity indexes."""
+
+    def matched_blocks(
+        self, replica: str, chain: List[str], now: Optional[float] = None
+    ) -> int: ...
+    def register(self, replica: str, chain: List[str], now: Optional[float] = None) -> None: ...
+    def block_count(self, replica: str) -> int: ...
 
 
 class PrefixAffinityIndex:
@@ -63,16 +73,22 @@ class PrefixAffinityIndex:
         return len(self._seen.get(replica, ()))
 
 
-def build_affinity_index(settings) -> PrefixAffinityIndex:
-    """Construct the index from PrefixKvAwareSettings.
+def build_affinity_index(settings) -> AffinityIndex:
+    """Construct the affinity index from PrefixKvAwareSettings.
 
-    Only the in-memory backend is implemented in M1; ``redis`` (shared across
-    gateway replicas) is planned — fail loudly rather than silently degrade.
+    - ``memory`` (default): fast, per-process — right for a single gateway replica.
+    - ``redis``: shared across gateway replicas so they route coherently (see
+      ``affinity_redis.RedisPrefixAffinityIndex``). The URL is already ${ENV}-expanded
+      by the config loader.
     """
     backend = getattr(settings, "affinity_backend", "memory")
     if backend == "redis":
-        raise NotImplementedError(
-            "affinity_backend=redis is planned but not implemented yet; use 'memory' for now."
+        from .affinity_redis import RedisPrefixAffinityIndex
+
+        return RedisPrefixAffinityIndex(
+            url=getattr(settings, "affinity_redis_url", "redis://localhost:6379/0"),
+            ttl_s=settings.affinity_ttl_s,
+            max_blocks_per_replica=settings.max_blocks_per_replica,
         )
     return PrefixAffinityIndex(
         ttl_s=settings.affinity_ttl_s,

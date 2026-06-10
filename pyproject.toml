@@ -44,6 +44,8 @@ dev = [
     "respx>=0.21",
     "locust>=2.24",
     "types-PyYAML>=6.0",
+    "redis>=5.0",
+    "fakeredis>=2.20",
 ]
 
 [project.urls]

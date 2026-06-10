@@ -18,7 +18,7 @@ from ..config import Settings
 from ..models import ChatCompletionRequest
 from ..observability import metrics
 from ..providers.base import Provider
-from .affinity import PrefixAffinityIndex, build_affinity_index
+from .affinity import AffinityIndex, build_affinity_index
 from .keying import build_routing_key
 from .state import DeploymentState
 from .strategies import STRATEGIES
@@ -39,7 +39,7 @@ class Router:
         self._rr_counter: Dict[str, int] = {}
 
         # prefix_kv_aware machinery (built only when that strategy is active)
-        self._affinity: Optional[PrefixAffinityIndex] = None
+        self._affinity: Optional[AffinityIndex] = None
         if self._is_prefix_aware:
             self._pkv = self.routing.prefix_kv_aware
             self._affinity = build_affinity_index(self._pkv)
@@ -69,7 +69,7 @@ class Router:
         return self.providers[state.dep.provider]
 
     @property
-    def affinity(self) -> Optional[PrefixAffinityIndex]:
+    def affinity(self) -> Optional[AffinityIndex]:
         return self._affinity
 
     def _candidate_pool(self, model: str, exclude: Set[str]) -> List[DeploymentState]:

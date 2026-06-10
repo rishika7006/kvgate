@@ -252,7 +252,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [x] Multimodal KV/prefix-aware routing (`prefix_kv_aware`) — image-hash-aware affinity
 - [x] GPU benchmarks: routing (1.84× lower p95) + LMCache offload (up to 2× lower TTFT) ([`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md))
 - [x] Next.js results dashboard — before/after charts + live-ops view ([`dashboard/`](dashboard/))
-- [ ] Redis-backed affinity index for cross-gateway-replica prefix routing
+- [x] Redis-backed affinity index for cross-gateway-replica prefix routing (`affinity_backend: redis`)
 - [ ] Redis-backed semantic index for cross-replica semantic cache
 - [ ] Streaming failover mid-response
 - [ ] Per-tenant budgets and spend caps
