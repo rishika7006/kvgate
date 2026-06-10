@@ -53,7 +53,7 @@ export function Live() {
         <p className="text-sm text-slate-400">
           {gatewayUrl()} ·{" "}
           {error ? (
-            <span className="text-rose-400">disconnected — run a gateway locally to see live data</span>
+            <span className="text-rose-400">disconnected. Run a gateway locally to see live data.</span>
           ) : (
             <span className="text-emerald-400">
               live · updated {updatedAt ? new Date(updatedAt).toLocaleTimeString() : "…"}

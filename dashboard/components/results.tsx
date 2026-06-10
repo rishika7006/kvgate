@@ -18,15 +18,14 @@ export function Results() {
     <div className="space-y-8">
       {/* Hero */}
       <section className="rounded-3xl border border-edge bg-gradient-to-br from-panel/80 to-panel/40 p-8">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
+        <h2 className="max-w-3xl text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
           Cutting multimodal LLM latency with{" "}
-          <span className="text-sky-400">KV-cache offload</span> &{" "}
+          <span className="text-sky-400">KV-cache offload</span> and{" "}
           <span className="text-emerald-400">prefix-aware routing</span>
         </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          InferGate is an open-source, OpenAI-compatible inference gateway in front of a vLLM
-          fleet. Benchmarked honestly on a 7B vision-language model — real gains, no inflated
-          vendor claims. Extends my AWS-internship work on LMCache KV-offload.
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
+          An open-source, OpenAI-compatible inference gateway in front of a vLLM fleet,
+          benchmarked on a 7B vision-language model.
         </p>
         <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
           {HEADLINES.map((h) => (
@@ -56,17 +55,17 @@ export function Results() {
           <Delta>TTFT p95: {routingP95.roundRobin} → {routingP95.prefixAware} ms ({routingP95Gain}× lower)</Delta>
           <Delta>Throughput +{thrGain}%</Delta>
           <Delta>{pct(ROUTING.affinityHitRate)} routing-affinity hit rate</Delta>
-          <Delta>Load balanced {ROUTING.loadSplit.prefixAware} (no snowball)</Delta>
+          <Delta>Balanced load: {ROUTING.loadSplit.prefixAware}</Delta>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-slate-500">
-          Round-robin scatters each image across both GPUs, so replicas keep re-prefilling ~6.5k
-          vision tokens. Prefix-aware keeps each image&apos;s KV resident on one replica — and a
-          load guard preserves balance so popular images don&apos;t pile onto one GPU.
+          Round-robin scatters each image across both replicas, so each one keeps re-prefilling
+          roughly 6.5k vision tokens. Prefix-aware keeps each image&apos;s KV resident on a single
+          replica, and a load guard preserves balance so popular images do not pile onto one replica.
         </p>
       </Panel>
 
       {/* Experiment 2: LMCache */}
-      <Panel kicker="Experiment 2 · single A40" title="LMCache CPU KV offload under GPU memory pressure">
+      <Panel kicker="Experiment 2 · single GPU" title="LMCache CPU KV offload under GPU memory pressure">
         <p className="mb-5 text-sm leading-relaxed text-slate-400">{LMCACHE.setup}</p>
         <div className="grid gap-6 md:grid-cols-2">
           <div>
@@ -99,14 +98,14 @@ export function Results() {
           <Delta>+65% throughput at the tightest cap</Delta>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-slate-500">
-          Honest framing: ~1.5–2×, only under pressure. At the 2560 cap, vLLM&apos;s own prefix-cache
-          hit rate collapsed to <span className="text-amber-400">~{pct(LMCACHE.vllmPrefixHitCollapse)}</span>{" "}
-          (thrashing); LMCache&apos;s CPU offload kept the multimodal KV warm. When the working set
-          fits in GPU, vLLM&apos;s own cache suffices and there&apos;s no gain.
+          These gains appear only under memory pressure. At the tightest cap, vLLM&apos;s own
+          prefix-cache hit rate fell to <span className="text-amber-400">~{pct(LMCACHE.vllmPrefixHitCollapse)}</span>{" "}
+          (thrashing) while CPU offload kept the multimodal KV warm. When the working set fits in
+          GPU memory, the engine&apos;s own cache suffices and there is no gain.
         </p>
       </Panel>
 
-      {/* KV offload hierarchy — where does the KV live? */}
+      {/* KV offload hierarchy: where does the KV live? */}
       <Panel kicker="Experiment 3 · KV offload hierarchy" title="Where does the offloaded KV live? CPU vs Redis">
         <p className="mb-5 text-sm leading-relaxed text-slate-400">{OFFLOAD.setup}</p>
         <div className="overflow-hidden rounded-xl border border-edge">
@@ -143,8 +142,8 @@ export function Results() {
           </table>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Stat label="CPU offload — TTFT" value={`${OFFLOAD.proof.cpuTtftSpeedup}× lower`} tone="good" />
-          <Stat label="CPU offload — throughput" value={`${OFFLOAD.proof.cpuThrSpeedup}× higher`} tone="good" />
+          <Stat label="CPU offload TTFT" value={`${OFFLOAD.proof.cpuTtftSpeedup}× lower`} tone="good" />
+          <Stat label="CPU offload throughput" value={`${OFFLOAD.proof.cpuThrSpeedup}× higher`} tone="good" />
           <Stat label="KV stored in Redis" value={`+${(OFFLOAD.proof.redisDeltaMb / 1024).toFixed(1)} GB`} tone="sky" />
           <Stat label="LMCache retrieve" value={`${OFFLOAD.proof.retrieveThroughputGbs} GB/s`} tone="sky" />
         </div>

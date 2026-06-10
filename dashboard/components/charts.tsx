@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-// A grouped vertical bar chart rendered with plain divs — no chart lib, deploys anywhere.
+// A grouped vertical bar chart rendered with plain divs (no chart lib, deploys anywhere).
+// Bars use explicit pixel heights against a fixed chart height so they always render.
 export function GroupedBars({
   groups,
   series,
@@ -14,29 +15,29 @@ export function GroupedBars({
   format?: (n: number) => string;
   lowerIsBetter?: boolean;
 }) {
-  const max = Math.max(...series.flatMap((s) => s.values)) * 1.18 || 1;
+  const CHART_H = 180;
+  const max = Math.max(...series.flatMap((s) => s.values)) * 1.2 || 1;
   return (
     <div>
-      <div className="flex items-end gap-8 px-2" style={{ height: 220 }}>
+      <div className="flex items-end gap-10 px-2" style={{ height: CHART_H }}>
         {groups.map((g, gi) => (
-          <div key={g} className="flex flex-1 flex-col items-center justify-end gap-2">
-            <div className="flex h-full w-full items-end justify-center gap-2">
-              {series.map((s) => {
-                const v = s.values[gi];
-                const h = Math.max(2, (v / max) * 100);
-                return (
-                  <div key={s.name} className="flex flex-1 flex-col items-center justify-end" style={{ maxWidth: 64 }}>
-                    <div className="mb-1 text-xs font-semibold tabular-nums text-slate-200">{format(v)}</div>
-                    <div
-                      className="w-full rounded-t-md transition-all"
-                      style={{ height: `${h}%`, background: s.color, minHeight: 4 }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="text-xs font-medium text-slate-400">{g}</div>
+          <div key={g} className="flex flex-1 items-end justify-center gap-3" style={{ height: CHART_H }}>
+            {series.map((s) => {
+              const v = s.values[gi];
+              const px = Math.max(4, Math.round((v / max) * CHART_H));
+              return (
+                <div key={s.name} className="flex flex-col items-center justify-end" style={{ width: 56 }}>
+                  <div className="mb-1 text-xs font-semibold tabular-nums text-slate-200">{format(v)}</div>
+                  <div className="w-full rounded-t-md" style={{ height: px, background: s.color }} />
+                </div>
+              );
+            })}
           </div>
+        ))}
+      </div>
+      <div className="mt-2 flex gap-10 border-t border-edge px-2 pt-2">
+        {groups.map((g) => (
+          <div key={g} className="flex-1 text-center text-xs font-medium text-slate-400">{g}</div>
         ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
@@ -46,7 +47,7 @@ export function GroupedBars({
             {s.name}
           </div>
         ))}
-        {unit && <span className="text-xs text-slate-500">({unit}{lowerIsBetter ? " — lower is better" : ""})</span>}
+        {unit && <span className="text-xs text-slate-500">({unit}{lowerIsBetter ? ", lower is better" : ""})</span>}
       </div>
     </div>
   );
