@@ -78,7 +78,20 @@ kvgate run            # starts on http://localhost:8080`}</Code>
           <Code>{`curl -s localhost:8080/v1/chat/completions \\
   -H 'Content-Type: application/json' \\
   -d '{"model":"demo","messages":[{"role":"user","content":"Hello"}]}' | jq`}</Code>
-          <p>The OpenAI SDK works unchanged — just point <K>base_url</K> at the gateway.</p>
+          <p>The OpenAI SDK works unchanged — just point <K>base_url</K> at the gateway:</p>
+          <Code>{`from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="not-needed")
+resp = client.chat.completions.create(
+    model="demo",
+    messages=[{"role": "user", "content": "What is KVGate?"}],
+)
+print(resp.choices[0].message.content)
+print(resp.kvgate)   # gateway metadata: cache status, provider, latency, cost`}</Code>
+          <p>
+            Multimodal requests use the standard OpenAI content-parts format (text +{" "}
+            <K>image_url</K>); KVGate hashes the image bytes into the routing key automatically.
+          </p>
         </Section>
 
         <Section id="config" kicker="Getting started" title="Configuration">
@@ -133,7 +146,25 @@ max_local_cpu_size: 30
 # or Redis tier (cross-host, near-unlimited capacity)
 # local_cpu: false
 # remote_url: "redis://localhost:6379"`}</Code>
-          <p>Measured: up to 2× lower TTFT (5.6× under the tightest cap), +65% throughput.</p>
+          <p>
+            CPU and Redis are independent offload targets, not a forced chain — set{" "}
+            <K>local_cpu: false</K> to write KV straight to Redis. Measured hierarchy (single A40,
+            40 images, GPU KV capped):
+          </p>
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
+              <tr><th className="py-2">Config</th><th className="py-2">TTFT p50</th><th className="py-2">Throughput</th><th className="py-2">Memory used</th></tr>
+            </thead>
+            <tbody className="divide-y divide-edge">
+              <tr><td className="py-2">GPU only (baseline)</td><td>1393 ms</td><td>1.11 req/s</td><td className="text-slate-500">none</td></tr>
+              <tr><td className="py-2 text-emerald-400">+ LMCache → CPU</td><td className="text-emerald-400">249 ms</td><td className="text-emerald-400">2.33 req/s</td><td className="text-sky-300">CPU RAM +35 GB</td></tr>
+              <tr><td className="py-2">+ LMCache → Redis</td><td>1424 ms</td><td>1.08 req/s</td><td className="text-sky-300">Redis +4.7 GB</td></tr>
+            </tbody>
+          </table>
+          <p>
+            CPU offload is the latency win (5.6× lower TTFT under the tightest cap, +65% throughput).
+            Redis is not faster on loopback; its value is capacity and cross-host KV sharing.
+          </p>
         </Section>
 
         <Section id="caching" kicker="Guides" title="Caching">
@@ -191,7 +222,24 @@ docker compose up --build
               ))}
             </tbody>
           </table>
-          <p>Each response carries a <K>kvgate</K> metadata object: cache status, provider, latencies, and estimated cost.</p>
+          <p>Each response carries a <K>kvgate</K> metadata object alongside the standard OpenAI fields:</p>
+          <Code>{`{
+  "id": "chatcmpl-...",
+  "choices": [ { "message": { "role": "assistant", "content": "..." } } ],
+  "usage": { "prompt_tokens": 1240, "completion_tokens": 80, "total_tokens": 1320 },
+  "kvgate": {
+    "cache": "miss",                 // exact | semantic | miss
+    "provider": "r1",
+    "upstream_model": "llava-hf/...",
+    "upstream_latency_ms": 412.0,
+    "latency_ms": 413.1,
+    "estimated_cost_usd": 0.0019
+  }
+}`}</Code>
+          <p>
+            Streaming responses (<K>stream: true</K>) return OpenAI-style Server-Sent Events; the
+            gateway streams the first token as soon as the chosen replica produces it.
+          </p>
         </Section>
 
         <Section id="metrics" kicker="Reference" title="Metrics">

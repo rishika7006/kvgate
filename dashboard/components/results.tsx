@@ -1,4 +1,4 @@
-import { ARCH, HEADLINES, LMCACHE, OFFLOAD, ROUTING } from "@/lib/results";
+import { ARCH, CONTACT, HEADLINES, LMCACHE, OFFLOAD, ROUTING } from "@/lib/results";
 import { Delta, GroupedBars, Panel } from "@/components/charts";
 
 const GREY = "#94a3b8";
@@ -17,21 +17,33 @@ export function Results() {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <section className="rounded-3xl border border-edge bg-gradient-to-br from-panel/80 to-panel/40 p-8">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
+      <section className="rounded-3xl border border-edge bg-gradient-to-br from-panel/90 via-panel/50 to-ink/30 px-8 py-12 md:px-12 md:py-16">
+        <div className="inline-flex items-center gap-2 rounded-full border border-edge bg-ink/40 px-3 py-1 text-xs font-medium text-slate-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          Open source · Benchmarked on GPUs
+        </div>
+        <h2 className="mt-5 text-4xl font-bold leading-[1.1] tracking-tight text-slate-50 md:text-5xl">
           Cutting multimodal LLM latency with{" "}
           <span className="text-sky-400">KV-cache offload</span> and{" "}
           <span className="text-emerald-400">prefix-aware routing</span>
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-slate-400">
+        <p className="mt-5 text-base leading-relaxed text-slate-400">
           An open-source, OpenAI-compatible inference gateway in front of a vLLM fleet,
           benchmarked on a 7B vision-language model.
         </p>
-        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mt-7 flex flex-wrap gap-3">
+          <a href="#docs" className="rounded-lg bg-sky-500/20 px-5 py-2.5 text-sm font-medium text-sky-300 ring-1 ring-sky-500/30 hover:bg-sky-500/30">
+            Read the docs
+          </a>
+          <a href={CONTACT.repo} target="_blank" rel="noreferrer" className="rounded-lg border border-edge bg-panel/70 px-5 py-2.5 text-sm font-medium text-slate-200 hover:text-white">
+            View on GitHub ↗
+          </a>
+        </div>
+        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
           {HEADLINES.map((h) => (
-            <div key={h.label} className="rounded-2xl border border-edge bg-ink/40 p-4">
-              <div className="text-3xl font-bold tabular-nums text-emerald-400">{h.value}</div>
-              <div className="mt-1 text-sm font-medium text-slate-200">{h.label}</div>
+            <div key={h.label} className="rounded-2xl border border-edge bg-ink/40 p-5">
+              <div className="text-3xl font-bold tabular-nums text-emerald-400 md:text-4xl">{h.value}</div>
+              <div className="mt-1.5 text-sm font-medium text-slate-200">{h.label}</div>
               <div className="mt-1 text-xs leading-snug text-slate-500">{h.sub}</div>
             </div>
           ))}

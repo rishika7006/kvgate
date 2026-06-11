@@ -107,6 +107,18 @@ export default function Dashboard() {
     if (typeof window !== "undefined") window.history.replaceState(null, "", `#${t}`);
   }
 
+  useEffect(() => {
+    function onHash() {
+      const h = window.location.hash.slice(1) as Tab;
+      if (TABS.some(([k]) => k === h)) {
+        setTab(h);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
