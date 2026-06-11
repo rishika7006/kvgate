@@ -31,3 +31,20 @@ htmlcov/
 *.log
 grafana-data/
 prometheus-data/
+
+# Internal planning / working docs (kept locally, not published)
+.claude/
+PROJECT_PLAN.md
+HANDOFF.md
+PROJECT_CONTEXT.md
+docs/RESUME.md
+docs/DECISION_GATES.md
+docs/KV_AWARE_PLAN.md
+docs/RESEARCH_KV_CACHE.md
+docs/RUNPOD_GUIDE.md
+docs/BENCHMARK.md
+docs/RESULTS.md
+scripts/ig_cpuproof.sh
+scripts/capture_dashboard.sh
+results/routing/route2.out
+results/offload/cpuproof.out

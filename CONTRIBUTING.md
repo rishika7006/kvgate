@@ -1,7 +1,7 @@
 # Contributing to KVGate
 
 Thanks for your interest in improving KVGate! Contributions of all kinds are
-welcome — bug reports, docs, new providers, routing strategies, and tests.
+welcome, bug reports, docs, new providers, routing strategies, and tests.
 
 ## Development setup
 
@@ -43,7 +43,7 @@ src/kvgate/
 ## Adding a provider
 
 1. Subclass `providers.base.Provider` and implement `complete()` + `stream()`.
-2. Map upstream errors to `ProviderError` with the right `retryable` flag — this
+2. Map upstream errors to `ProviderError` with the right `retryable` flag, this
    is what drives router failover.
 3. Register it in `providers/__init__.py._REGISTRY`.
 4. Add a test (mock the HTTP layer with `respx`).

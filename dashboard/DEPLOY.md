@@ -1,9 +1,9 @@
 # Deploying the KVGate dashboard
 
-The dashboard is a **static Next.js export** (`output: "export"` in `next.config.mjs`) — the
+The dashboard is a **static Next.js export** (`output: "export"` in `next.config.mjs`), the
 Results tab bakes in the benchmark data, so it needs no backend and hosts anywhere.
 
-## Vercel (recommended — gives a public URL for the demo link)
+## Vercel (recommended, gives a public URL for the demo link)
 
 1. Push the repo to GitHub (done).
 2. On <https://vercel.com> → **Add New → Project** → import `rishika7006/kvgate`.

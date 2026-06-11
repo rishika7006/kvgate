@@ -6,10 +6,10 @@
 
 ## The problem
 
-When an LLM server (vLLM) processes a prompt, it builds a **KV cache** — the
+When an LLM server (vLLM) processes a prompt, it builds a **KV cache**, the
 model's working memory for that prompt. If a later request shares the same
 *prefix* (e.g. the same long system prompt, or the same image), the server can
-reuse that cached work instead of recomputing it — much lower time-to-first-token.
+reuse that cached work instead of recomputing it, much lower time-to-first-token.
 
 vLLM does this reuse **within a single server**. But production runs *many*
 replicas behind a load balancer. A normal load balancer is **KV-blind**: it might
@@ -19,12 +19,12 @@ replica most likely to have its prefix **warm**.
 
 ## How KVGate decides (the mechanism)
 
-**Key honesty: KVGate does not *know* each replica's true cache state. It
+**Key point: KVGate does not *know* each replica's true cache state. It
 *predicts* it from the traffic it has routed.** It keeps its own "notebook" and
 bets that a replica it recently sent a prefix to still has it warm.
 
 ```
-Request ─▶ 1. fingerprint ─▶ 2. score replicas ─▶ 3. pick ─▶ 4. record ─▶ upstream
+Request ─ 1. fingerprint ─ 2. score replicas ─ 3. pick ─ 4. record ─ upstream
               the prompt        by longest warm        best        the choice
               (+ image hash)    matching prefix      (load-guarded)
 ```
@@ -32,7 +32,7 @@ Request ─▶ 1. fingerprint ─▶ 2. score replicas ─▶ 3. pick ─▶ 4. 
 1. **Fingerprint the request** (`routing/keying.py`)
    Chop the prompt into ~16-token blocks; compute a *running* hash per block so a
    shared prefix yields identical leading hashes. **Each image is replaced by a hash
-   of the image itself** — so the same text with a different image diverges, and the
+   of the image itself**, so the same text with a different image diverges, and the
    same image collapses to the same key. Result: a chain `[h1, h2, h3, …]`.
 
 2. **Score each replica by longest warm prefix** (`routing/affinity.py` + `router.py`)
@@ -40,7 +40,7 @@ Request ─▶ 1. fingerprint ─▶ 2. score replicas ─▶ 3. pick ─▶ 4. 
    timestamps). For the new request, count how many *leading* hashes each replica
    already has. Score = `weight_prefix × matched_blocks − weight_load × in_flight`.
 
-3. **Pick — with a load guard** (`router.py`)
+3. **Pick, with a load guard** (`router.py`)
    Choose the highest-scoring replica, but only among replicas that aren't
    overloaded relative to the least-busy one (`max_inflight_skew`). This stops a
    universal prefix (e.g. a shared system prompt) from snowballing all traffic onto
@@ -50,19 +50,19 @@ Request ─▶ 1. fingerprint ─▶ 2. score replicas ─▶ 3. pick ─▶ 4. 
    Register the request's hashes against the chosen replica (it's about to warm
    them). Entries expire via TTL + LRU, approximating the engine's real eviction.
 
-**Tools used:** all standard-library Python — `hashlib` (hashing), `collections`
+**Tools used:** all standard-library Python, `hashlib` (hashing), `collections`
 (`OrderedDict`/`defaultdict` for the table + LRU), `time` (TTL). No external
 dependency, no GPU, no cooperation from the inference engine.
 
-## What it does NOT know (the honest caveat)
+## What it does not know
 
 KVGate's routing is a **best-effort prediction**, not ground truth. Its bet can
 be wrong if a replica evicted the cache under memory pressure, restarted, or
-received traffic from outside the gateway. Two things keep it honest:
+received traffic from outside the gateway. Two things keep it accurate:
 
-- **`affinity hit rate`** (KVGate metric) — how often the notebook *believed* it
+- **`affinity hit rate`** (KVGate metric), how often the notebook *believed* it
   found a warm replica.
-- **`prefix_cache_hits`** (vLLM's own metric) — whether the bet *actually* landed on
+- **`prefix_cache_hits`** (vLLM's own metric), whether the bet *actually* landed on
   real cached memory. The GPU benchmark cross-checks these: a high affinity hit rate
   is only meaningful if vLLM's real prefix-cache-hit rate rises with it.
 
@@ -76,8 +76,8 @@ the same interface.
 
 ## How this compares to what already exists
 
-KV/prefix-aware routing is **not a new invention** — it ships in three serious
-systems as of 2025–2026:
+KV/prefix-aware routing is **not a new invention**, it ships in three serious
+systems as of 2025-2026:
 
 | System | What it does | Trade-offs |
 |---|---|---|
@@ -85,24 +85,24 @@ systems as of 2025–2026:
 | **NVIDIA Dynamo** | KV-cache-aware routing via engine **KV events** (NATS/ZMQ) | Heavy datacenter platform; Kubernetes |
 | **llm-d** (Red Hat/IBM) | Precise prefix-cache-aware routing | Kubernetes-native |
 
-**What KVGate contributes (the honest differentiators):**
+**What KVGate contributes (the differentiators):**
 
-1. **Lightweight & vendor-neutral** — a plain Docker, OpenAI-compatible gateway;
+1. **Lightweight & vendor-neutral**, a plain Docker, OpenAI-compatible gateway;
    no Kubernetes, no platform lock-in. Runs on a laptop or two GPUs.
-2. **No engine cooperation required** — infers affinity from traffic, so it works in
+2. **No engine cooperation required**, infers affinity from traffic, so it works in
    front of heterogeneous / unmodified backends.
-3. **Multimodal-aware routing keys** — routing keyed on **image identity**, an
+3. **Multimodal-aware routing keys**, routing keyed on **image identity**, an
    under-explored angle at the cross-replica routing layer.
-4. **A reproducible, honest multimodal benchmark** — none exists publicly; we ship one.
+4. **A reproducible multimodal benchmark**, none exists publicly; we ship one.
 
 **How to describe it accurately (e.g. in interviews):**
 
 > "KV-aware routing exists in heavyweight platforms like Dynamo and llm-d, but
 > they're Kubernetes-bound and rely on engine cooperation. I built a lightweight,
 > vendor-neutral, **multimodal-aware** gateway that infers cache affinity purely from
-> traffic — no engine changes — and benchmarked it on vision-language models, since
-> no honest public benchmark existed."
+> traffic, no engine changes, and benchmarked it on vision-language models, since
+> no public benchmark existed."
 
 This is truthful and strong: it shows command of the state of the art, a real gap
-(lightweight + multimodal + no-cooperation), and rigorous measurement — far better
+(lightweight + multimodal + no-cooperation), and rigorous measurement, far better
 than claiming to have invented the technique.

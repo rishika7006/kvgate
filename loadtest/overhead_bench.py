@@ -37,7 +37,9 @@ async def worker(client, host, model, idx, out):
 
 
 async def main_async(args):
-    limits = httpx.Limits(max_connections=args.concurrency, max_keepalive_connections=args.concurrency)
+    limits = httpx.Limits(
+        max_connections=args.concurrency, max_keepalive_connections=args.concurrency
+    )
     async with httpx.AsyncClient(timeout=30, limits=limits) as client:
         # warmup
         await worker(client, args.host, args.model, -1, [])
@@ -52,7 +54,7 @@ async def main_async(args):
         await asyncio.gather(*(guarded(i) for i in range(args.requests)))
         wall = time.perf_counter() - t_start
 
-    lat = sorted(l * 1000 for l, ok in results if ok)
+    lat = sorted(s * 1000 for s, ok in results if ok)
     n_ok = len(lat)
     failed = len(results) - n_ok
 
