@@ -49,6 +49,20 @@ export function Live() {
 
   return (
     <div>
+      <div className="mb-6 rounded-2xl border border-edge bg-panel/50 p-5">
+        <h3 className="text-base font-semibold text-slate-100">What is this?</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+          A real-time view of a running KVGate instance. When you point it at a live gateway, it
+          polls <code className="text-sky-300">/admin/stats</code> and{" "}
+          <code className="text-sky-300">/metrics</code> every 2s and shows what the gateway is
+          doing right now: total requests, cache hit rate, routing-affinity hit rate, and a
+          per-replica table (in-flight load, latency, failures, circuit-breaker state). It&apos;s
+          the operator&apos;s view, useful for watching routing and caching behave under live
+          traffic. To populate it, run a gateway locally (<code className="text-sky-300">kvgate run</code>)
+          and set <code className="text-sky-300">NEXT_PUBLIC_GATEWAY_URL</code>; otherwise the
+          measured results on the Results tab tell the performance story.
+        </p>
+      </div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-slate-400">
           {gatewayUrl()} ·{" "}

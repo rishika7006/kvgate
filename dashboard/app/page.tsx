@@ -3,19 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Results } from "@/components/results";
 import { Live } from "@/components/live";
+import { Docs } from "@/components/docs";
 import { CONTACT } from "@/lib/results";
 
-type Tab = "results" | "live";
+type Tab = "results" | "docs" | "live";
 
 function LogoMark() {
-  // A gateway routing one request out to a replica fleet: input node fans out to two nodes.
+  // Distributed cache mesh: a hexagon with a warm central node linked to peer nodes.
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden className="shrink-0">
-      <rect x="2" y="2" width="28" height="28" rx="8" stroke="#38bdf8" strokeWidth="2" />
-      <path d="M11.5 16h3M16 16l4.5-5M16 16l4.5 5" stroke="#64748b" strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="10" cy="16" r="2.6" fill="#34d399" />
-      <circle cx="22" cy="11" r="2.6" fill="#38bdf8" />
-      <circle cx="22" cy="21" r="2.6" fill="#38bdf8" />
+      <path d="M16 3.5l10.4 6v13l-10.4 6-10.4-6v-13z" stroke="#38bdf8" strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <path d="M16 16l-5-3M16 16l5-3M16 16v6" stroke="#64748b" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="2.5" fill="#34d399" />
+      <circle cx="11" cy="13" r="1.7" fill="#38bdf8" />
+      <circle cx="21" cy="13" r="1.7" fill="#38bdf8" />
+      <circle cx="16" cy="22" r="1.7" fill="#38bdf8" />
     </svg>
   );
 }
@@ -85,8 +87,25 @@ function ContactMenu() {
   );
 }
 
+const TABS: [Tab, string][] = [
+  ["results", "Results"],
+  ["docs", "Docs"],
+  ["live", "Live demo"],
+];
+
 export default function Dashboard() {
-  const [tab, setTab] = useState<Tab>("results");
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window !== "undefined") {
+      const h = window.location.hash.slice(1) as Tab;
+      if (TABS.some(([k]) => k === h)) return h;
+    }
+    return "results";
+  });
+
+  function selectTab(t: Tab) {
+    setTab(t);
+    if (typeof window !== "undefined") window.history.replaceState(null, "", `#${t}`);
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -112,13 +131,10 @@ export default function Dashboard() {
       </header>
 
       <nav className="mb-8 inline-flex rounded-xl border border-edge bg-panel/50 p-1">
-        {([
-          ["results", "Results"],
-          ["live", "Live demo"],
-        ] as [Tab, string][]).map(([key, label]) => (
+        {TABS.map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => selectTab(key)}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               tab === key ? "bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/30" : "text-slate-400 hover:text-slate-200"
             }`}
@@ -128,21 +144,29 @@ export default function Dashboard() {
         ))}
       </nav>
 
-      {tab === "results" ? <Results /> : <Live />}
+      {tab === "results" ? <Results /> : tab === "docs" ? <Docs /> : <Live />}
 
-      <footer className="mt-12 rounded-2xl border border-edge bg-panel/40 px-6 py-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-slate-200">Built by {CONTACT.name}</div>
-            <div className="text-xs text-slate-500">{CONTACT.location} · Open to collaboration</div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
-            <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-1.5 hover:text-white"><MailIcon /> {CONTACT.email}</a>
-            <a href={CONTACT.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-white"><LinkedInIcon /> LinkedIn</a>
-            <a href={CONTACT.github} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-white"><GitHubIcon /> GitHub</a>
+      {/* bottom bookend: closing CTA + contact */}
+      <footer className="mt-12">
+        <div className="rounded-3xl border border-edge bg-gradient-to-br from-panel/80 to-panel/40 px-8 py-10 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-50">Let&apos;s build fast inference together</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
+            KVGate is open source and built by {CONTACT.name}, a new-grad software/ML engineer in {CONTACT.location}.
+            Open to roles and collaboration.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a href={CONTACT.repo} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-sky-500/20 px-4 py-2 text-sm font-medium text-sky-300 ring-1 ring-sky-500/30 hover:bg-sky-500/30">
+              <GitHubIcon /> View on GitHub
+            </a>
+            <a href={CONTACT.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg border border-edge bg-panel/70 px-4 py-2 text-sm text-slate-200 hover:text-white">
+              <LinkedInIcon /> LinkedIn
+            </a>
+            <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-2 rounded-lg border border-edge bg-panel/70 px-4 py-2 text-sm text-slate-200 hover:text-white">
+              <MailIcon /> {CONTACT.email}
+            </a>
           </div>
         </div>
-        <div className="mt-4 border-t border-edge pt-3 text-center text-xs text-slate-600">
+        <div className="mt-5 text-center text-xs text-slate-600">
           Open source · Apache 2.0 · Numbers are measured. See <code>docs/BENCHMARK_REPORT.md</code>.
         </div>
       </footer>
