@@ -9,6 +9,8 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/lint-ruff-orange.svg)](https://github.com/astral-sh/ruff)
 
+**[Live demo](https://kvgate.vercel.app)** · **[Benchmark report](docs/BENCHMARK_REPORT.md)**
+
 </div>
 
 KVGate is an open-source, OpenAI-compatible gateway that sits in front of a fleet of vLLM
