@@ -146,6 +146,22 @@ User likes inferxgate.com's layout: strong **top hero panel** and **bottom panel
    topics/tags, README emoji/header cleanup for consistency, social-preview image, pin/links,
    release/tag, and anything else for a polished public repo. Capture the user's list when given.
 
+## CONFIRMED next-action order (user, 2026-06-10)
+1. **Frontend v2** (do FIRST, before launch): new logo (pick from concepts) · inferxgate-style
+   hero + bottom bookend panels · tabs incl. a **detailed Docs tab** (model on inferxgate docs:
+   sidebar with Getting Started / Guides / API Reference / Providers / Advanced) · Live-tab intro
+   (reminder #1) · polish.
+2. **GitHub changes** (user will give full list).
+3. **Vercel deploy** (root dir `dashboard`) → README live link.
+4. **Make repo public** (F4).
+5. **LinkedIn post + résumé** (G1/G2, LAST).
+
+Docs-tab section plan (KVGate-specific, inferxgate-modeled): Getting Started (Intro, Quickstart,
+Install, Configuration) · Guides (Smart/KV-aware routing, LMCache KV offload, Caching, Rate limiting,
+Per-tenant budgets, Docker/Grafana) · API Reference (Chat completions, Models, Health, Metrics,
+Admin stats) · Benchmarks (link to results) · Advanced (Redis distributed routing, Security, Performance/overhead).
+
 ## Definition of "ready to deploy + go public"
-Dashboard polished ✅ · rename done ✅ · Tier-1 done ✅ · CI green ✅ · then: Vercel deploy →
-README live-demo link → make repo public (F4) → LinkedIn post + résumé (G1/G2, LAST).
+Dashboard polished ✅ · rename done ✅ · Tier-1 done ✅ · CI green ✅ · frontend v2 (next) ·
+GitHub changes · then: Vercel deploy → README live-demo link → make repo public (F4) →
+LinkedIn post + résumé (G1/G2, LAST).
