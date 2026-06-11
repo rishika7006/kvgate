@@ -4,7 +4,7 @@ We escalate ambition only when the numbers justify it. Three stages, each with a
 explicit go/no-go gate, so we never sink GPU time or effort into a path the data
 doesn't support.
 
-## Stage 1 — Finish InferGate + benchmark it (own the result)
+## Stage 1 — Finish KVGate + benchmark it (own the result)
 
 **Do:** Run the A→E sweep on real GPUs (`docs/RUNPOD_GUIDE.md`), Llava-OneVision-7B.
 
@@ -26,12 +26,12 @@ before escalating; the project still stands on the offloading result + the hones
 same fleet/workload, as comparison baselines.
 
 **GATE 2 — the claim we want to be able to make truthfully:**
-- InferGate lands **within ~10–20%** of the Production-Stack/Dynamo router's
+- KVGate lands **within ~10–20%** of the Production-Stack/Dynamo router's
   prefix-cache hit rate **with far less setup** (no Kubernetes, no engine changes).
 
 ✅ Pass → we have the headline: *"a lightweight, vendor-neutral, multimodal gateway
 that gets within X% of the heavyweight systems."* Proceed to Stage 3.
-⚠️ If InferGate is notably worse → that's still a publishable, honest finding
+⚠️ If KVGate is notably worse → that's still a publishable, honest finding
 ("inference-based routing trades Y accuracy for Z simplicity"), and points us at the
 "precise mode" (consume real KV events) as future work.
 
@@ -50,7 +50,7 @@ proves the comparison is worth publishing; Stage 3 converts the work into extern
 credibility. We stop or pivot at any failed gate instead of forcing it.
 
 ## Résumé bullet (fill brackets after Stage 1, strengthen after Stage 2)
-> Built **InferGate**, an open-source OpenAI-compatible LLM gateway with multimodal
+> Built **KVGate**, an open-source OpenAI-compatible LLM gateway with multimodal
 > KV/prefix-aware routing; on a 2×GPU Llava-OneVision-7B fleet it raised engine
 > prefix-cache hit rate from **[D%]→[E%]** and cut TTFT p95 by **[Z%]** vs a KV-blind
 > load balancer — within **[N%]** of NVIDIA Dynamo's router with no Kubernetes or

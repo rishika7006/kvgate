@@ -1,39 +1,26 @@
-"""Anthropic Messages API provider.
+"""OpenAI-style providers (OpenAI, and any OpenAI-compatible server such as vLLM,
+TGI, Ollama, LM Studio, or LocalAI).
 
-Anthropic uses a different request/response shape than OpenAI (system prompt is a
-top-level field, content is a list of blocks, SSE event types differ), so this
-provider translates between InferGate's OpenAI-shaped requests and the Anthropic
-Messages API in both directions.
+vLLM in particular exposes an OpenAI-compatible ``/v1/chat/completions`` endpoint,
+so the same client works for hosted OpenAI and your own self-hosted GPU server —
+you just point ``base_url`` at it. This mirrors the kind of vLLM serving stack
+KVGate is designed to sit in front of.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
-from typing import List, Tuple
 
 import httpx
 
 from ..config import ProviderConfig
-from ..models import ChatCompletionRequest, ChatMessage, estimate_tokens
+from ..models import ChatCompletionRequest, estimate_tokens
 from .base import Provider, ProviderError, ProviderResult
 
-_ANTHROPIC_VERSION = "2023-06-01"
 
-
-def _split_system(messages: List[ChatMessage]) -> Tuple[str, list]:
-    system_parts, convo = [], []
-    for m in messages:
-        if m.role == "system":
-            system_parts.append(m.text_content())
-        else:
-            role = "assistant" if m.role == "assistant" else "user"
-            convo.append({"role": role, "content": m.text_content()})
-    return "\n".join(system_parts), convo
-
-
-class AnthropicProvider(Provider):
-    default_base_url = "https://api.anthropic.com/v1"
+class OpenAIProvider(Provider):
+    default_base_url = "https://api.openai.com/v1"
 
     def __init__(self, config: ProviderConfig):
         super().__init__(config)
@@ -42,30 +29,29 @@ class AnthropicProvider(Provider):
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0))
 
     def _headers(self) -> dict:
-        return {
-            "Content-Type": "application/json",
-            "x-api-key": self.api_key or "",
-            "anthropic-version": _ANTHROPIC_VERSION,
-        }
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
 
     def _payload(self, request: ChatCompletionRequest, model: str, stream: bool) -> dict:
-        system, convo = _split_system(request.messages)
         payload = {
             "model": model,
-            "messages": convo,
-            "max_tokens": request.max_tokens or 1024,
+            "messages": [m.model_dump(exclude_none=True) for m in request.messages],
             "temperature": request.temperature,
             "top_p": request.top_p,
             "stream": stream,
         }
-        if system:
-            payload["system"] = system
+        if request.max_tokens is not None:
+            payload["max_tokens"] = request.max_tokens
+        if request.stop is not None:
+            payload["stop"] = request.stop
         return payload
 
     async def complete(self, request: ChatCompletionRequest, model: str) -> ProviderResult:
         try:
             resp = await self._client.post(
-                f"{self.base_url}/messages",
+                f"{self.base_url}/chat/completions",
                 headers=self._headers(),
                 json=self._payload(request, model, stream=False),
             )
@@ -73,23 +59,20 @@ class AnthropicProvider(Provider):
             raise ProviderError(f"{self.name}: network error: {exc}", retryable=True) from exc
 
         if resp.status_code >= 400:
+            retryable = resp.status_code in (408, 409, 429, 500, 502, 503, 504)
             raise ProviderError(
                 f"{self.name}: upstream {resp.status_code}: {resp.text[:300]}",
                 status_code=resp.status_code,
-                retryable=resp.status_code in (429, 500, 502, 503, 504),
+                retryable=retryable,
             )
 
         data = resp.json()
-        content = "".join(
-            block.get("text", "")
-            for block in data.get("content", [])
-            if block.get("type") == "text"
-        )
+        content = data["choices"][0]["message"].get("content", "") or ""
         usage = data.get("usage", {})
         return ProviderResult(
             content=content,
-            prompt_tokens=usage.get("input_tokens", estimate_tokens(request.prompt_text())),
-            completion_tokens=usage.get("output_tokens", estimate_tokens(content)),
+            prompt_tokens=usage.get("prompt_tokens", estimate_tokens(request.prompt_text())),
+            completion_tokens=usage.get("completion_tokens", estimate_tokens(content)),
             upstream_model=data.get("model", model),
         )
 
@@ -97,7 +80,7 @@ class AnthropicProvider(Provider):
         try:
             async with self._client.stream(
                 "POST",
-                f"{self.base_url}/messages",
+                f"{self.base_url}/chat/completions",
                 headers=self._headers(),
                 json=self._payload(request, model, stream=True),
             ) as resp:
@@ -109,19 +92,27 @@ class AnthropicProvider(Provider):
                         retryable=resp.status_code in (429, 500, 502, 503, 504),
                     )
                 async for line in resp.aiter_lines():
-                    if not line.startswith("data:"):
+                    if not line or not line.startswith("data:"):
                         continue
                     data = line[len("data:") :].strip()
+                    if data == "[DONE]":
+                        break
                     try:
-                        event = json.loads(data)
+                        chunk = json.loads(data)
                     except json.JSONDecodeError:
                         continue
-                    if event.get("type") == "content_block_delta":
-                        piece = event.get("delta", {}).get("text")
-                        if piece:
-                            yield piece
+                    delta = chunk["choices"][0].get("delta", {})
+                    piece = delta.get("content")
+                    if piece:
+                        yield piece
         except httpx.HTTPError as exc:
             raise ProviderError(f"{self.name}: network error: {exc}", retryable=True) from exc
 
     async def aclose(self) -> None:
         await self._client.aclose()
+
+
+class OpenAICompatibleProvider(OpenAIProvider):
+    """Self-hosted OpenAI-compatible server (e.g. vLLM). ``base_url`` is required."""
+
+    default_base_url = "http://localhost:8000/v1"

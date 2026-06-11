@@ -33,17 +33,17 @@ jobs:
         run: mypy src
 
       - name: Test
-        run: pytest --cov=infergate --cov-report=term-missing
+        run: pytest --cov=kvgate --cov-report=term-missing
 
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t infergate:ci .
+        run: docker build -t kvgate:ci .
       - name: Smoke-test container
         run: |
-          docker run -d --name ig -p 8080:8080 infergate:ci
+          docker run -d --name ig -p 8080:8080 kvgate:ci
           for i in $(seq 1 20); do
             if curl -sf localhost:8080/healthz; then echo "healthy"; break; fi
             sleep 1

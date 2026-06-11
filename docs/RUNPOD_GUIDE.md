@@ -1,4 +1,4 @@
-# Beginner's guide: running the InferGate GPU benchmark on RunPod
+# Beginner's guide: running the KVGate GPU benchmark on RunPod
 
 This is a click-by-click guide for someone who has **never rented a GPU**. Follow it
 top to bottom. You'll end with real numbers: time-to-first-token (TTFT), throughput,
@@ -21,20 +21,20 @@ and KV-cache hit rate — for both the **offloading** test and the **smart-routi
 
 ---
 
-## Getting InferGate onto the pod
+## Getting KVGate onto the pod
 
 The pod is a fresh Linux machine — it needs our code. Two options:
 
-- **Option A (recommended):** I push InferGate to a **private** GitHub repo. On the
+- **Option A (recommended):** I push KVGate to a **private** GitHub repo. On the
   pod you run `git clone <url>`. It stays private until results are good, then we flip
   it public. (This satisfies your "push only when results are good" rule — private ≠
   published.)
 - **Option B:** Upload the few needed files manually via the RunPod web file browser:
   `loadtest/multimodal_bench.py`, `scripts/compare_results.py`,
-  `config/config.kvaware.example.yaml`, and the `infergate` package.
+  `config/config.kvaware.example.yaml`, and the `kvgate` package.
 
 Tell me which you prefer and I'll set it up. The commands below assume the repo is at
-`~/infergate`.
+`~/kvgate`.
 
 ---
 
@@ -53,7 +53,7 @@ This measures the benefit of **LMCache KV-cache offloading** on a single server:
 ### 1.2 Install everything (paste into the web terminal)
 ```bash
 pip install -q vllm lmcache transformers
-cd ~ && git clone <your-private-repo-url> infergate && cd infergate
+cd ~ && git clone <your-private-repo-url> kvgate && cd kvgate
 pip install -q -e .
 ```
 
@@ -138,7 +138,7 @@ with offloading ON in both. The D→E gap is the original contribution.
 
 ### 2.1 Deploy a 2-GPU pod (same steps, choose **2× GPU**), then:
 ```bash
-cd ~/infergate
+cd ~/kvgate
 export MODEL=llava-hf/llava-onevision-qwen2-7b-ov-hf
 cat > lmcache.yaml <<'YAML'
 chunk_size: 256
@@ -155,7 +155,7 @@ CUDA_VISIBLE_DEVICES=1 LMCACHE_CONFIG_FILE=lmcache.yaml vllm serve $MODEL --port
   --kv-transfer-config '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both"}'
 ```
 
-### 2.2 Point InferGate at both replicas
+### 2.2 Point KVGate at both replicas
 Create `config/gpu.yaml` (I'll generate this exactly for you):
 ```yaml
 providers:
@@ -174,14 +174,14 @@ routing: { strategy: round_robin }   # we flip this between D and E
 ### 2.3 Run D (baseline) then E (smart)
 ```bash
 # tab 3 — D: round_robin
-infergate run -c config/gpu.yaml --port 8080 &
+kvgate run -c config/gpu.yaml --port 8080 &
 python loadtest/multimodal_bench.py --host http://localhost:8080 --model vlm \
   --images-dir images --images 20 --sessions 80 --turns 6 --concurrency 16 --out D.json
 kill %1
 
 # edit config/gpu.yaml: routing.strategy: prefix_kv_aware  (set max_inflight_skew: 8)
 # tab 3 — E: prefix_kv_aware
-infergate run -c config/gpu.yaml --port 8080 &
+kvgate run -c config/gpu.yaml --port 8080 &
 python loadtest/multimodal_bench.py --host http://localhost:8080 --model vlm \
   --images-dir images --images 20 --sessions 80 --turns 6 --concurrency 16 --out E.json
 kill %1

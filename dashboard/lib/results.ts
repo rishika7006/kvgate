@@ -76,14 +76,14 @@ export const CONTACT = {
   email: "rishika.vaish@utdallas.edu",
   linkedin: "https://www.linkedin.com/in/rishika-vaish",
   github: "https://github.com/rishika7006",
-  repo: "https://github.com/rishika7006/infergate",
+  repo: "https://github.com/rishika7006/kvgate",
 };
 
 export const ARCH = {
   stack: ["FastAPI", "vLLM 0.11", "LMCache 0.3.7", "Redis", "Prometheus", "Grafana", "Next.js 14", "Docker"],
   flow: [
     { node: "Client", desc: "OpenAI-compatible request (text + image)" },
-    { node: "InferGate gateway", desc: "hashes prefix incl. image bytes → picks warm replica" },
+    { node: "KVGate gateway", desc: "hashes prefix incl. image bytes → picks warm replica" },
     { node: "vLLM replica fleet", desc: "GPU prefix cache + LMCache CPU KV offload" },
   ],
 };

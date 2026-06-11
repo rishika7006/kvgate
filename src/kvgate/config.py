@@ -1,4 +1,4 @@
-"""Configuration models and loader for InferGate.
+"""Configuration models and loader for KVGate.
 
 Config is layered: a YAML file provides the structure, and ``${ENV_VAR}`` /
 ``${ENV_VAR:-default}`` placeholders inside string values are expanded from the
@@ -159,7 +159,7 @@ class Settings(BaseModel):
 def load_settings(path: Optional[str] = None) -> Settings:
     """Load settings from a YAML file (env-expanded). Falls back to a built-in
     mock-only default when no path is given and no config file is found."""
-    path = path or os.environ.get("INFERGATE_CONFIG")
+    path = path or os.environ.get("KVGATE_CONFIG")
     if path:
         raw = yaml.safe_load(Path(path).read_text()) or {}
         return Settings.model_validate(_expand_env(raw))

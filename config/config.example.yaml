@@ -1,6 +1,6 @@
-# InferGate configuration example.
+# KVGate configuration example.
 # Copy to config/config.yaml and edit. Secrets use ${ENV_VAR} expansion so they
-# never live in the file. Run with: infergate run -c config/config.yaml
+# never live in the file. Run with: kvgate run -c config/config.yaml
 
 server:
   host: 0.0.0.0
@@ -13,7 +13,7 @@ server:
 auth:
   enabled: false
   api_keys:
-    - key: ${INFERGATE_DEMO_KEY:-sk-demo-local}
+    - key: ${KVGATE_DEMO_KEY:-sk-demo-local}
       tenant: demo
       rpm: 1200          # per-key override of ratelimit.default_rpm
 

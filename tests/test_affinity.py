@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from infergate.config import PrefixKvAwareSettings
-from infergate.routing.affinity import PrefixAffinityIndex, build_affinity_index
+from kvgate.config import PrefixKvAwareSettings
+from kvgate.routing.affinity import PrefixAffinityIndex, build_affinity_index
 
 
 def test_matched_blocks_after_register():
@@ -56,7 +56,7 @@ def test_build_redis_backend(monkeypatch):
         return fakeredis.FakeStrictRedis(decode_responses=decode_responses)
 
     monkeypatch.setattr("redis.from_url", fake_from_url)
-    from infergate.routing.affinity_redis import RedisPrefixAffinityIndex
+    from kvgate.routing.affinity_redis import RedisPrefixAffinityIndex
 
     idx = build_affinity_index(PrefixKvAwareSettings(affinity_backend="redis"))
     assert isinstance(idx, RedisPrefixAffinityIndex)

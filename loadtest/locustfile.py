@@ -1,4 +1,4 @@
-"""Locust load test for InferGate.
+"""Locust load test for KVGate.
 
 Runs entirely against the mock providers, so you can benchmark routing, caching,
 and rate limiting with zero upstream cost. A slice of requests intentionally

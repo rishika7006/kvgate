@@ -1,10 +1,10 @@
-"""Multimodal KV/prefix-aware routing benchmark for InferGate.
+"""Multimodal KV/prefix-aware routing benchmark for KVGate.
 
 Generates a deterministic multi-turn VQA / image-RAG workload: a pool of images,
 each paired with a long shared system prompt, queried over multi-turn sessions
 with a configurable image-revisit ratio (so the same image+prefix recurs and
 creates cross-replica KV-reuse opportunities). Drives the requests through
-InferGate and reports TTFT/throughput plus the gateway's routing-affinity hit
+KVGate and reports TTFT/throughput plus the gateway's routing-affinity hit
 rate, so you can compare scenarios:
 
   Scenario D (baseline):  routing.strategy = round_robin     (KV-blind LB)
@@ -15,7 +15,7 @@ Runs against the mock fleet with no GPU for a dry run; point --host at a real
 
 Examples
 --------
-    # Dry run against a locally-running mock gateway (infergate run):
+    # Dry run against a locally-running mock gateway (kvgate run):
     python loadtest/multimodal_bench.py --host http://localhost:8080 \
         --model demo --sessions 40 --turns 6 --concurrency 16 --out bench.json
 
@@ -72,7 +72,7 @@ def _synthetic_ref(image_id: int) -> str:
     # A placeholder reference used for GPU-free dry runs (the mock provider ignores
     # image content). Real vLLM would try to FETCH a URL, so for real runs pass
     # --images-dir to send actual images as base64 data URIs instead.
-    return f"https://bench.infergate.local/images/img_{image_id:05d}.png"
+    return f"https://bench.kvgate.local/images/img_{image_id:05d}.png"
 
 
 def _data_uri(path: str) -> str:
@@ -230,7 +230,7 @@ async def _scrape_affinity(host: str) -> Dict[str, float]:
         return out
     for outcome in ("warm", "cold"):
         pattern = (
-            r'infergate_routing_affinity_total\{[^}]*outcome="'
+            r'kvgate_routing_affinity_total\{[^}]*outcome="'
             + outcome
             + r'"[^}]*\}\s+([0-9.eE+]+)'
         )
@@ -269,7 +269,7 @@ def summarize(results: List[Dict[str, Any]], affinity: Dict[str, float]) -> Dict
 
 
 def _print_summary(summary: Dict[str, Any]) -> None:
-    print("\n===== InferGate multimodal benchmark =====")
+    print("\n===== KVGate multimodal benchmark =====")
     print(f"requests       : {summary['succeeded']}/{summary['requests']} ok "
           f"({summary['failed']} failed)")
     print(f"wall clock     : {summary['wall_s']}s")
@@ -309,7 +309,7 @@ async def _amain(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="InferGate multimodal routing benchmark")
+    p = argparse.ArgumentParser(description="KVGate multimodal routing benchmark")
     p.add_argument("--host", default="http://localhost:8080")
     p.add_argument("--model", default="demo")
     p.add_argument("--images", type=int, default=50, help="Number of distinct images to use")

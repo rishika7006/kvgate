@@ -1,4 +1,4 @@
-"""InferGate — an OpenAI-compatible LLM inference gateway."""
+"""KVGate — an OpenAI-compatible LLM inference gateway."""
 
 from __future__ import annotations
 

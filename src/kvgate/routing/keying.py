@@ -52,7 +52,7 @@ def build_routing_key(
     request: ChatCompletionRequest,
     block_size: int = 16,
     image_key: str = "bytes_sha256",
-    seed: str = "infergate",
+    seed: str = "kvgate",
 ) -> RoutingKey:
     """Build the cumulative block-hash chain for a request."""
     units: List[str] = []

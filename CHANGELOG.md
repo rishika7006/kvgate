@@ -20,6 +20,6 @@ Initial release.
 - Prometheus metrics at `/metrics`, `/admin/stats` live routing introspection, and a
   pre-built Grafana dashboard.
 - API-key auth with per-tenant resolution and per-key rate-limit overrides.
-- `infergate` CLI (`run`, `validate`), Docker image, docker-compose stack
+- `kvgate` CLI (`run`, `validate`), Docker image, docker-compose stack
   (gateway + Redis + Prometheus + Grafana), and a Locust load-test harness.
 - Test suite (pytest), CI across Python 3.9/3.11/3.12 plus Docker smoke test.

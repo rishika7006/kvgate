@@ -1,9 +1,9 @@
-# InferGate — Multimodal KV/Prefix-Aware Routing: Implementation & Benchmark Plan
+# KVGate — Multimodal KV/Prefix-Aware Routing: Implementation & Benchmark Plan
 
 **Status:** proposal for review (no code written yet)
 **Target model:** `llava-hf/llava-onevision-qwen2-7b-ov-hf` (primary, LMCache-documented) —
 `Qwen/Qwen2.5-VL-7B-Instruct` as an optional stretch second model
-**Goal:** make InferGate a *lightweight, vendor-neutral, multimodal-aware, KV/prefix-aware
+**Goal:** make KVGate a *lightweight, vendor-neutral, multimodal-aware, KV/prefix-aware
 gateway* in front of a fleet of vLLM+LMCache replicas, and produce an honest,
 reproducible "with vs without" benchmark on a multimodal model.
 
@@ -15,7 +15,7 @@ reproducible "with vs without" benchmark on a multimodal model.
 
 ## 0. Positioning (why this is not a re-implementation)
 
-| Existing | Limitation | InferGate's angle |
+| Existing | Limitation | KVGate's angle |
 |---|---|---|
 | vLLM Production Stack router | K8s-coupled, tied to the full stack | Plain Docker, OpenAI-compatible, drop-in |
 | NVIDIA Dynamo / llm-d | Heavy, datacenter/K8s, vendor-aligned | Vendor-neutral, runs on a laptop or 2 GPUs |
@@ -32,7 +32,7 @@ so the same image+prompt is routed to the replica that already has its (large) v
 
 ### 1.1 Where it plugs in
 
-InferGate already maps a **logical model → N deployments**. For KV-aware routing we point
+KVGate already maps a **logical model → N deployments**. For KV-aware routing we point
 those N deployments at **N replicas of the same vLLM model** (different `base_url`s):
 
 ```yaml
@@ -100,8 +100,8 @@ works because frequently-used prefixes are continually refreshed.
 
 ### 1.3 Cross-gateway scaling
 
-- Single InferGate instance → in-memory index.
-- Multiple InferGate instances → shared index in **Redis** (reuse the existing cache backend
+- Single KVGate instance → in-memory index.
+- Multiple KVGate instances → shared index in **Redis** (reuse the existing cache backend
   choice): block hashes in a Redis hash/ZSET keyed by replica, with TTL. Mirrors the
   existing `cache.backend: memory|redis` pattern.
 
@@ -116,14 +116,14 @@ backend later.
 ### 1.5 New/changed code (for when we build)
 
 ```
-src/infergate/routing/
+src/kvgate/routing/
   affinity.py        # NEW: PrefixAffinityIndex (memory + redis), block-chain hashing
   keying.py          # NEW: routing-key builder (text + image-hash), approx/hf tokenizer
   strategies.py      # +prefix_kv_aware (request-aware)
   router.py          # pick(model, exclude, request=None) — thread request to strategy
-src/infergate/config.py        # +PrefixKvAwareSettings under RoutingSettings
-src/infergate/service.py       # pass request into router.pick(...)
-src/infergate/observability/metrics.py
+src/kvgate/config.py        # +PrefixKvAwareSettings under RoutingSettings
+src/kvgate/service.py       # pass request into router.pick(...)
+src/kvgate/observability/metrics.py
                      # +routing_affinity_matched_blocks (histogram),
                      # +routing_affinity_hits_total{outcome=warm|cold}
 tests/test_affinity.py, tests/test_prefix_routing.py   # NEW
@@ -149,9 +149,9 @@ routing:
 
 ### 1.7 New metrics (the proof)
 
-- `infergate_routing_affinity_hits_total{outcome="warm|cold"}` — % of requests routed to a
+- `kvgate_routing_affinity_hits_total{outcome="warm|cold"}` — % of requests routed to a
   replica that already had a matching prefix.
-- `infergate_routing_affinity_matched_blocks` (histogram) — how much prefix we reused.
+- `kvgate_routing_affinity_matched_blocks` (histogram) — how much prefix we reused.
 - Plus scrape each vLLM's `vllm:prefix_cache_hits_total` / `vllm:prefix_cache_queries_total`
   and `vllm:time_to_first_token_seconds` to correlate gateway routing with *engine* hit rate.
 
@@ -199,7 +199,7 @@ Replica 2: `CUDA_VISIBLE_DEVICES=1 ... --port 8002`.
 
 ### 2.4 Scenario toggles
 
-| Scenario | Replicas | vLLM prefix cache | LMCache | InferGate strategy |
+| Scenario | Replicas | vLLM prefix cache | LMCache | KVGate strategy |
 |---|---|---|---|---|
 | **A** baseline | 1 | `--no-enable-prefix-caching` | off (no kv-transfer-config) | n/a (direct) |
 | **B** APC | 1 | on (default) | off | n/a (direct) |
@@ -235,13 +235,13 @@ trace** so all 5 scenarios see identical input:
 | End-to-end latency | client | user-perceived |
 | Throughput (req/s, output tok/s) | client | capacity |
 | **Engine prefix-cache hit rate** | vLLM `/metrics` | proves KV reuse happened |
-| **Routing-affinity hit rate** | InferGate `/metrics` | proves the *router* sent it to the warm replica |
+| **Routing-affinity hit rate** | KVGate `/metrics` | proves the *router* sent it to the warm replica |
 | GPU KV-cache utilization / headroom | vLLM `/metrics` | offload's memory benefit |
 | Cost / 1k requests | derived (GPU $/hr ÷ throughput) | the business case |
 
 ### 3.3 Tools
 
-- **Primary:** custom async client (httpx) driving InferGate — only way to capture the
+- **Primary:** custom async client (httpx) driving KVGate — only way to capture the
   *routing-affinity* metric and control the reuse pattern. Emits per-request JSON + summary.
 - **Cross-check:** `vllm bench serve` (has multimodal support) and/or **GuideLLM** for
   standard throughput/latency sweeps against a single replica (validates our client's numbers).
@@ -279,7 +279,7 @@ Fleet (D→E), 2 replicas, conc=32, 70% image revisit:
 2. **M2 — Benchmark harness (no GPU):** `multimodal_bench.py` trace generator + metrics
    collector + results writer; dry-run against mock replicas.
 3. **M3 — Backend bring-up (GPU):** stand up 2× vLLM+LMCache Qwen2.5-VL replicas; verify
-   multimodal KV reuse works (or fall back model). Smoke test through InferGate.
+   multimodal KV reuse works (or fall back model). Smoke test through KVGate.
 4. **M4 — Run sweep + write-up (GPU):** run A–E, collect metrics, fill tables, Grafana
    screenshots, short report + blog draft. Update resume bullets with *measured* numbers.
 

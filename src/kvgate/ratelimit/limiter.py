@@ -102,7 +102,7 @@ class RedisRateLimiter(RateLimiter):  # pragma: no cover - requires redis
         refill_per_s = rpm / 60.0
         now = time.time()
         allowed, tokens = await self._script(
-            keys=[f"infergate:rl:{identity}"], args=[capacity, refill_per_s, now]
+            keys=[f"kvgate:rl:{identity}"], args=[capacity, refill_per_s, now]
         )
         tokens = float(tokens)
         if int(allowed) == 1:

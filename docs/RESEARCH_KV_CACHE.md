@@ -20,7 +20,7 @@
   LMCache documents audio / single-image / multi-image / video examples. *(high)*
 - **KV-aware routing already exists** in the vLLM Production Stack router, NVIDIA Dynamo
   (event-driven via NATS/JetStream/ZMQ), and llm-d (Kubernetes). *(high)*
-- **The gap InferGate fills:** a **vendor-neutral, multimodal-aware, KV/prefix-aware
+- **The gap KVGate fills:** a **vendor-neutral, multimodal-aware, KV/prefix-aware
   gateway** that does *not* require Kubernetes or buying into a full stack — plus an
   honest, reproducible multimodal benchmark, which currently does not exist publicly.
 

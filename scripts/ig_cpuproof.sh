@@ -11,7 +11,7 @@
 # cross-host/replica KV sharing -- the AWS-internship pattern. We show "where the KV lives", not a race.
 # Captures per config: TTFT/throughput, CPU-RAM delta (free -m), Redis used_memory delta, and
 # vLLM prefix-cache counters. All outputs -> /root/igout. Run via the launcher.
-cd ~/infergate && source ~/venv/bin/activate
+cd ~/kvgate && source ~/venv/bin/activate
 MODEL=llava-hf/llava-onevision-qwen2-7b-ov-hf
 PORT=19001; W=/root/igout; BLOCKS=2560
 IMAGES=40; SESSIONS=80; CONC=4

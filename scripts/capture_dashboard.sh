@@ -15,8 +15,8 @@ CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 PY="${PY:-python3}"
 
 # 1) gateway (prefix_kv_aware, two mock replicas) + traffic
-pkill -9 -f "infergate run" 2>/dev/null || true; sleep 1
-nohup infergate run -c config/config.mock-kvaware.yaml --port 8080 >/tmp/ig_gw.log 2>&1 &
+pkill -9 -f "kvgate run" 2>/dev/null || true; sleep 1
+nohup kvgate run -c config/config.mock-kvaware.yaml --port 8080 >/tmp/ig_gw.log 2>&1 &
 until curl -sf -m3 localhost:8080/readyz >/dev/null 2>&1; do sleep 1; done
 "$PY" loadtest/multimodal_bench.py --host http://localhost:8080 --model demo \
   --sessions 90 --turns 3 --concurrency 6 --images 10 --seed 7 --out /tmp/dash.json >/dev/null 2>&1

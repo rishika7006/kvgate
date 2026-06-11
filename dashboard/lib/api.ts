@@ -1,4 +1,4 @@
-// Client-side data layer: talks to the InferGate gateway's /admin/stats and
+// Client-side data layer: talks to the KVGate gateway's /admin/stats and
 // /metrics endpoints (CORS is open on the gateway) and parses the Prometheus text.
 
 export function gatewayUrl(): string {
@@ -68,13 +68,13 @@ export function aggregate(samples: MetricSample[]): ParsedMetrics {
   const affinity: Record<string, number> = {};
   const tokens: Record<string, number> = {};
   for (const s of samples) {
-    if (s.name === "infergate_requests_total") {
+    if (s.name === "kvgate_requests_total") {
       requestsByStatus[s.labels.status] = (requestsByStatus[s.labels.status] || 0) + s.value;
-    } else if (s.name === "infergate_cache_events_total") {
+    } else if (s.name === "kvgate_cache_events_total") {
       cache[s.labels.outcome] = (cache[s.labels.outcome] || 0) + s.value;
-    } else if (s.name === "infergate_routing_affinity_total") {
+    } else if (s.name === "kvgate_routing_affinity_total") {
       affinity[s.labels.outcome] = (affinity[s.labels.outcome] || 0) + s.value;
-    } else if (s.name === "infergate_tokens_total") {
+    } else if (s.name === "kvgate_tokens_total") {
       tokens[s.labels.direction] = (tokens[s.labels.direction] || 0) + s.value;
     }
   }

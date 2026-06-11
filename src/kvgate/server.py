@@ -1,8 +1,8 @@
 """ASGI entrypoint.
 
 Usage:
-    uvicorn infergate.server:app
-    INFERGATE_CONFIG=config/config.yaml uvicorn infergate.server:app
+    uvicorn kvgate.server:app
+    KVGATE_CONFIG=config/config.yaml uvicorn kvgate.server:app
 """
 
 from __future__ import annotations

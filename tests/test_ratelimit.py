@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from infergate.config import RateLimitSettings
-from infergate.ratelimit import MemoryRateLimiter
+from kvgate.config import RateLimitSettings
+from kvgate.ratelimit import MemoryRateLimiter
 
 
 async def test_token_bucket_allows_then_blocks():

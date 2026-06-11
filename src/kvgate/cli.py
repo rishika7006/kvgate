@@ -1,4 +1,4 @@
-"""``infergate`` command-line interface."""
+"""``kvgate`` command-line interface."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ def _setup_logging(level: str) -> None:
     )
 
 
-@click.group(help="InferGate — OpenAI-compatible LLM inference gateway.")
-@click.version_option(__version__, prog_name="infergate")
+@click.group(help="KVGate — OpenAI-compatible LLM inference gateway.")
+@click.version_option(__version__, prog_name="kvgate")
 def main() -> None:
     pass
 
@@ -38,10 +38,10 @@ def run(config: str, host: str, port: int, reload: bool) -> None:
     port = port or settings.server.port
 
     if config:
-        os.environ["INFERGATE_CONFIG"] = config
+        os.environ["KVGATE_CONFIG"] = config
 
     if reload:
-        uvicorn.run("infergate.server:app", host=host, port=port, reload=True)
+        uvicorn.run("kvgate.server:app", host=host, port=port, reload=True)
     else:
         from .app import create_app
 

@@ -1,7 +1,7 @@
 """OpenAI-compatible request/response schemas.
 
 These mirror the subset of the OpenAI Chat Completions API that the gateway
-supports, so existing OpenAI client SDKs work against InferGate unchanged.
+supports, so existing OpenAI client SDKs work against KVGate unchanged.
 """
 
 from __future__ import annotations
@@ -87,8 +87,8 @@ class ChatCompletionResponse(BaseModel):
     model: str
     choices: List[ChatCompletionChoice]
     usage: Usage = Field(default_factory=Usage)
-    # InferGate-specific metadata (non-breaking extra field).
-    infergate: Dict[str, Any] = Field(default_factory=dict)
+    # KVGate-specific metadata (non-breaking extra field).
+    kvgate: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ---- Streaming chunk schemas ----
@@ -120,7 +120,7 @@ class ModelCard(BaseModel):
     id: str
     object: str = "model"
     created: int = Field(default_factory=lambda: int(time.time()))
-    owned_by: str = "infergate"
+    owned_by: str = "kvgate"
 
 
 class ModelList(BaseModel):

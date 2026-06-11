@@ -1,6 +1,6 @@
-# InferGate Dashboard
+# KVGate Dashboard
 
-A modern **Next.js (App Router) + TypeScript + Tailwind** live dashboard for the InferGate
+A modern **Next.js (App Router) + TypeScript + Tailwind** live dashboard for the KVGate
 gateway. It polls the gateway's `/admin/stats` and `/metrics` endpoints and visualizes:
 
 - Routing strategy, cache backend, and rate-limit status
@@ -14,7 +14,7 @@ gateway. It polls the gateway's `/admin/stats` and `/metrics` endpoints and visu
 
 ```bash
 # 1. Start the gateway (in the repo root), e.g. the mock KV-aware fleet:
-infergate run -c config/config.mock-kvaware.yaml --port 8080
+kvgate run -c config/config.mock-kvaware.yaml --port 8080
 
 # 2. Start the dashboard:
 cd dashboard

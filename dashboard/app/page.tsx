@@ -94,7 +94,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <LogoMark />
           <div>
-            <div className="text-2xl font-bold tracking-tight text-slate-50">InferGate</div>
+            <div className="text-2xl font-bold tracking-tight text-slate-50">KVGate</div>
             <div className="text-sm text-slate-400">Multimodal Inference Gateway</div>
           </div>
         </div>

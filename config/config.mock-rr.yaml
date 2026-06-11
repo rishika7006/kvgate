@@ -1,7 +1,7 @@
 # Baseline (KV-blind) counterpart to config.mock-kvaware.yaml: identical mock fleet,
 # but round_robin routing. Used for the D (baseline) vs E (prefix_kv_aware) contrast
 # in a GPU-free dry run.
-#   infergate run -c config/config.mock-rr.yaml --port 8088
+#   kvgate run -c config/config.mock-rr.yaml --port 8088
 
 server:
   host: 0.0.0.0

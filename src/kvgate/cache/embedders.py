@@ -68,7 +68,7 @@ class SentenceTransformerEmbedder(Embedder):  # pragma: no cover - optional dep
         except ImportError as exc:
             raise RuntimeError(
                 "sentence_transformers embedder requested but not installed. "
-                "Install with: pip install 'infergate[embeddings]'"
+                "Install with: pip install 'kvgate[embeddings]'"
             ) from exc
         self._model = SentenceTransformer(model)
         self.dim = self._model.get_sentence_embedding_dimension()

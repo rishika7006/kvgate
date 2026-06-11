@@ -1,7 +1,7 @@
-# Phase-2 GPU benchmark config: InferGate in front of two real vLLM+LMCache replicas.
+# Phase-2 GPU benchmark config: KVGate in front of two real vLLM+LMCache replicas.
 # Flip routing.strategy between round_robin (scenario D, baseline) and
 # prefix_kv_aware (scenario E, headline), restarting the gateway between runs.
-#   infergate run -c config/gpu.yaml --port 8080
+#   kvgate run -c config/gpu.yaml --port 8080
 
 server:
   host: 0.0.0.0

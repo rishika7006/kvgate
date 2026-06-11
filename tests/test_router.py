@@ -4,8 +4,8 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from infergate.cache import CacheManager
-from infergate.config import (
+from kvgate.cache import CacheManager
+from kvgate.config import (
     CacheSettings,
     Deployment,
     ModelConfig,
@@ -13,11 +13,11 @@ from infergate.config import (
     RoutingSettings,
     Settings,
 )
-from infergate.models import ChatCompletionRequest
-from infergate.providers.base import Provider, ProviderError, ProviderResult
-from infergate.providers.mock import MockProvider
-from infergate.routing import NoDeploymentAvailable, Router
-from infergate.service import GatewayError, GatewayService
+from kvgate.models import ChatCompletionRequest
+from kvgate.providers.base import Provider, ProviderError, ProviderResult
+from kvgate.providers.mock import MockProvider
+from kvgate.routing import NoDeploymentAvailable, Router
+from kvgate.service import GatewayError, GatewayService
 
 
 class FailingProvider(Provider):
@@ -82,7 +82,7 @@ async def test_failover_to_healthy_deployment():
     svc = GatewayService(s, router, CacheManager(CacheSettings(enabled=False)))
 
     resp = await svc.complete(_req())
-    assert resp.infergate["provider"] == "good"
+    assert resp.kvgate["provider"] == "good"
     assert bad.calls >= 1  # the bad deployment was attempted and failed over
 
 

@@ -1,17 +1,17 @@
 <div align="center">
 
-# 🚪 InferGate
+# 🚪 KVGate
 
 **An OpenAI-compatible LLM inference gateway — smart routing, semantic caching, rate limiting, and full observability.**
 
-[![CI](https://github.com/rishika7006/infergate/actions/workflows/ci.yml/badge.svg)](https://github.com/rishika7006/infergate/actions/workflows/ci.yml)
+[![CI](https://github.com/rishika7006/kvgate/actions/workflows/ci.yml/badge.svg)](https://github.com/rishika7006/kvgate/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/lint-ruff-orange.svg)](https://github.com/astral-sh/ruff)
 
 </div>
 
-InferGate sits in front of your LLM backends — self-hosted **vLLM**/**TGI** servers and hosted APIs like **OpenAI** and **Anthropic** — and gives you one OpenAI-compatible endpoint with the production concerns already handled: **routing across backends, exact + semantic caching, per-tenant rate limiting, circuit breaking, and Prometheus/Grafana observability.**
+KVGate sits in front of your LLM backends — self-hosted **vLLM**/**TGI** servers and hosted APIs like **OpenAI** and **Anthropic** — and gives you one OpenAI-compatible endpoint with the production concerns already handled: **routing across backends, exact + semantic caching, per-tenant rate limiting, circuit breaking, and Prometheus/Grafana observability.**
 
 > It runs **out of the box with zero API keys** thanks to a built-in deterministic mock provider, so you can clone, start, stream, and load-test in under a minute.
 
@@ -37,7 +37,7 @@ Benchmarked on **Llava-OneVision-7B** (a vision-language model) on rented A40 GP
 
 A Next.js dashboard renders these experiments as before/after charts (plus a live-ops tab):
 
-<p align="center"><img src="docs/assets/dashboard.png" width="80%" alt="InferGate results dashboard" /></p>
+<p align="center"><img src="docs/assets/dashboard.png" width="80%" alt="KVGate results dashboard" /></p>
 
 ```bash
 cd dashboard && npm install && npm run dev   # http://localhost:3000
@@ -45,9 +45,9 @@ cd dashboard && npm install && npm run dev   # http://localhost:3000
 
 ---
 
-## Why InferGate?
+## Why KVGate?
 
-Serving open-source LLMs in production means re-solving the same problems every time: which backend gets each request, how to avoid paying twice for identical prompts, how to stop one tenant starving the rest, and how to see latency/cost/throughput. InferGate packages those into one drop-in gateway.
+Serving open-source LLMs in production means re-solving the same problems every time: which backend gets each request, how to avoid paying twice for identical prompts, how to stop one tenant starving the rest, and how to see latency/cost/throughput. KVGate packages those into one drop-in gateway.
 
 | Capability | What it does |
 |---|---|
@@ -66,7 +66,7 @@ Serving open-source LLMs in production means re-solving the same problems every 
 
 ```
                        ┌─────────────────────────────────────────────────┐
-   OpenAI SDK / curl   │                   InferGate                      │
+   OpenAI SDK / curl   │                   KVGate                      │
         │              │                                                  │
         ▼              │   Auth ─▶ Rate limit ─▶ Cache ─▶ Router ─▶ ...    │
   POST /v1/chat/────────▶ (tenant)   (token      (exact +   (latency /     │
@@ -108,13 +108,13 @@ Stack, NVIDIA Dynamo, llm-d). Full explanation + honest comparison:
 ## Quickstart (no API keys needed)
 
 ```bash
-git clone https://github.com/rishika7006/infergate.git
-cd infergate
+git clone https://github.com/rishika7006/kvgate.git
+cd kvgate
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
 # Start the gateway (uses the built-in mock providers)
-infergate run
+kvgate run
 ```
 
 In another terminal:
@@ -139,13 +139,13 @@ from openai import OpenAI
 client = OpenAI(base_url="http://localhost:8080/v1", api_key="not-needed")
 resp = client.chat.completions.create(
     model="demo",
-    messages=[{"role": "user", "content": "What is InferGate?"}],
+    messages=[{"role": "user", "content": "What is KVGate?"}],
 )
 print(resp.choices[0].message.content)
-print(resp.infergate)  # gateway metadata: cache status, provider, latency, cost
+print(resp.kvgate)  # gateway metadata: cache status, provider, latency, cost
 ```
 
-Send the same request twice and the second response comes back from cache (`infergate.cache == "exact"`); send a *reworded* version and watch it hit the semantic cache.
+Send the same request twice and the second response comes back from cache (`kvgate.cache == "exact"`); send a *reworded* version and watch it hit the semantic cache.
 
 ---
 
@@ -158,9 +158,9 @@ docker compose up --build
 
 | Service | URL |
 |---|---|
-| InferGate API | http://localhost:8080 (`/docs` for Swagger) |
+| KVGate API | http://localhost:8080 (`/docs` for Swagger) |
 | Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 (admin / admin) — **InferGate dashboard** pre-loaded |
+| Grafana | http://localhost:3000 (admin / admin) — **KVGate dashboard** pre-loaded |
 
 ---
 
@@ -171,7 +171,7 @@ Copy and edit the config, then point `--config` at it:
 ```bash
 cp config/config.example.yaml config/config.yaml
 export OPENAI_API_KEY=sk-...        # secrets via ${ENV} expansion, never in the file
-infergate run -c config/config.yaml
+kvgate run -c config/config.yaml
 ```
 
 A **model** is a logical name clients request; it fans out to one or more **deployments** (provider + upstream model). Example — serve a logical `gpt-4o` mostly from your own vLLM box and overflow to hosted OpenAI:
@@ -228,7 +228,7 @@ See [`config/config.example.yaml`](config/config.example.yaml) for the full, com
 Validate any config:
 
 ```bash
-infergate validate -c config/config.yaml
+kvgate validate -c config/config.yaml
 ```
 
 ---

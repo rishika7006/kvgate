@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from infergate.cache import CacheManager
-from infergate.config import (
+from kvgate.cache import CacheManager
+from kvgate.config import (
     CacheSettings,
     Deployment,
     ModelConfig,
@@ -10,10 +10,10 @@ from infergate.config import (
     RoutingSettings,
     Settings,
 )
-from infergate.models import ChatCompletionRequest
-from infergate.providers.mock import MockProvider
-from infergate.routing import Router
-from infergate.service import GatewayService
+from kvgate.models import ChatCompletionRequest
+from kvgate.providers.mock import MockProvider
+from kvgate.routing import Router
+from kvgate.service import GatewayService
 
 
 def _settings(**pkv):
@@ -108,4 +108,4 @@ async def test_service_routes_repeated_prompt_to_same_provider():
     r1 = await svc.complete(_req(sys + "alpha"))
     r2 = await svc.complete(_req(sys + "beta"))
     # Both share the long prefix -> same replica serves them (warm KV reuse).
-    assert r1.infergate["provider"] == r2.infergate["provider"]
+    assert r1.kvgate["provider"] == r2.kvgate["provider"]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from infergate.config import default_settings, load_settings
+from kvgate.config import default_settings, load_settings
 
 
 def test_default_settings_runs_with_mock():

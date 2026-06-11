@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from infergate.cache import CacheManager, canonical_key
-from infergate.cache.embedders import HashingEmbedder, cosine_similarity
-from infergate.config import CacheSettings, SemanticCacheSettings
-from infergate.models import ChatCompletionRequest
+from kvgate.cache import CacheManager, canonical_key
+from kvgate.cache.embedders import HashingEmbedder, cosine_similarity
+from kvgate.config import CacheSettings, SemanticCacheSettings
+from kvgate.models import ChatCompletionRequest
 
 
 def _req(content, model="demo", **kw):

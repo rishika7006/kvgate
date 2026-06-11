@@ -17,8 +17,8 @@ COPY config ./config
 EXPOSE 8080
 
 # Use the built-in mock config by default; mount a config file and set
-# INFERGATE_CONFIG to point at it for real backends.
+# KVGATE_CONFIG to point at it for real backends.
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/healthz').status==200 else 1)"
 
-CMD ["uvicorn", "infergate.server:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "kvgate.server:app", "--host", "0.0.0.0", "--port", "8080"]

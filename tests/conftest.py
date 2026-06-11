@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from infergate import create_app
-from infergate.config import (
+from kvgate import create_app
+from kvgate.config import (
     CacheSettings,
     Deployment,
     ModelConfig,

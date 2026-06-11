@@ -1,4 +1,4 @@
-# Deploying the InferGate dashboard
+# Deploying the KVGate dashboard
 
 The dashboard is a **static Next.js export** (`output: "export"` in `next.config.mjs`) — the
 Results tab bakes in the benchmark data, so it needs no backend and hosts anywhere.
@@ -6,7 +6,7 @@ Results tab bakes in the benchmark data, so it needs no backend and hosts anywhe
 ## Vercel (recommended — gives a public URL for the demo link)
 
 1. Push the repo to GitHub (done).
-2. On <https://vercel.com> → **Add New → Project** → import `rishika7006/infergate`.
+2. On <https://vercel.com> → **Add New → Project** → import `rishika7006/kvgate`.
 3. In project settings set **Root Directory = `dashboard`** (Vercel auto-detects Next.js).
 4. Deploy. Every push to `main` redeploys automatically.
 

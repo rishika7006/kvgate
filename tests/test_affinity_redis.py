@@ -10,9 +10,9 @@ from __future__ import annotations
 import fakeredis
 import pytest
 
-from infergate.config import PrefixKvAwareSettings
-from infergate.routing.affinity import build_affinity_index
-from infergate.routing.affinity_redis import RedisPrefixAffinityIndex
+from kvgate.config import PrefixKvAwareSettings
+from kvgate.routing.affinity import build_affinity_index
+from kvgate.routing.affinity_redis import RedisPrefixAffinityIndex
 
 
 @pytest.fixture

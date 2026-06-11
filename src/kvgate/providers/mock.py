@@ -1,6 +1,6 @@
 """A deterministic, dependency-free mock provider.
 
-This is what makes InferGate runnable (and load-testable) the moment you clone
+This is what makes KVGate runnable (and load-testable) the moment you clone
 it, with zero API keys. It produces a stable pseudo-response, simulates realistic
 latency, and streams token-by-token at a configurable rate so the routing,
 caching, rate-limiting, and metrics paths all exercise end to end.
@@ -17,7 +17,7 @@ from ..models import ChatCompletionRequest, estimate_tokens
 from .base import Provider, ProviderResult
 
 _LOREM = (
-    "InferGate routed this request through the {name} backend. "
+    "KVGate routed this request through the {name} backend. "
     "This is a deterministic mock response generated locally so the gateway can "
     "run, stream, cache, and load-test without any upstream API keys. "
     "Prompt fingerprint: {fp}. The quick brown fox jumps over the lazy dog."

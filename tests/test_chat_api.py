@@ -17,15 +17,15 @@ def test_basic_completion(client):
     assert data["choices"][0]["message"]["role"] == "assistant"
     assert data["choices"][0]["message"]["content"]
     assert data["usage"]["total_tokens"] > 0
-    assert data["infergate"]["cache"] == "miss"
-    assert "estimated_cost_usd" in data["infergate"]
+    assert data["kvgate"]["cache"] == "miss"
+    assert "estimated_cost_usd" in data["kvgate"]
 
 
 def test_exact_cache_hit(client):
     first = _chat(client, "cache me please").json()
     second = _chat(client, "cache me please").json()
-    assert first["infergate"]["cache"] == "miss"
-    assert second["infergate"]["cache"] == "exact"
+    assert first["kvgate"]["cache"] == "miss"
+    assert second["kvgate"]["cache"] == "exact"
     # Same content returned, but a fresh id each time.
     assert first["choices"][0]["message"]["content"] == second["choices"][0]["message"]["content"]
     assert first["id"] != second["id"]
@@ -68,8 +68,8 @@ def test_health_and_ready(client):
 def test_metrics_endpoint(client):
     _chat(client, "metric check")
     body = client.get("/metrics").text
-    assert "infergate_requests_total" in body
-    assert "infergate_cache_events_total" in body
+    assert "kvgate_requests_total" in body
+    assert "kvgate_cache_events_total" in body
 
 
 def test_admin_stats(client):
@@ -95,5 +95,5 @@ def test_streaming_served_from_cache(client):
     ) as r:
         lines = [ln for ln in r.iter_lines() if ln]
     first = json.loads(lines[0][len("data: ") :])
-    assert first["infergate"]["cache"] == "exact"
+    assert first["kvgate"]["cache"] == "exact"
     assert lines[-1] == "data: [DONE]"

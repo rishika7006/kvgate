@@ -19,7 +19,7 @@ class RedisKVStore(KVStore):
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError(
                 "redis backend requested but 'redis' is not installed. "
-                "Install with: pip install 'infergate[redis]'"
+                "Install with: pip install 'kvgate[redis]'"
             ) from exc
         self._redis = redis.from_url(url, decode_responses=True)
 

@@ -1,4 +1,4 @@
-# InferGate — Master Plan & Pending Checklist
+# KVGate — Master Plan & Pending Checklist
 
 > The single source of truth for scope & progress. We tick these off one-by-one.
 > Pairs with `HANDOFF.md` (resume context) and `docs/` (detail). Last reviewed against
@@ -36,11 +36,11 @@ F4 go public (gate) · G1/G2 post+résumé (LAST).
 - ✅ B1. LMCache **multimodal** offload GPU win (A40): ~2× TTFT, +65% throughput under memory pressure (`results/`, `RESULTS.md`)
 - ✅ B2. **Smart routing GPU benchmark (D round-robin vs E prefix_kv_aware)** on 2× A40 (one replica/GPU): **TTFT p95 2783 → 1516 ms (1.84×, −45%)**, throughput +14%, **98.6% affinity**, load balanced 73/71. Raw in `results/routing/`. *(root cause of earlier failures: RunPod's nginx squats on port 8001 → vLLM couldn't bind → traffic collapsed to one replica. Fixed by using ports 19001/19002/19080 + per-replica smoke test + self-daemonizing launcher writing to `/root/igout`.)*
 - ⬜ B3. Verify Next.js dashboard live against a running gateway w/ traffic → screenshot/GIF for README
-- ⬜ B4. Verify full `docker compose` stack (gateway+Redis+Prometheus+Grafana) → Grafana shows live InferGate panels → screenshot
+- ⬜ B4. Verify full `docker compose` stack (gateway+Redis+Prometheus+Grafana) → Grafana shows live KVGate panels → screenshot
 - ⬜ B5. Benchmark report doc with tables, methodology, honest caveats, and charts (matplotlib) generated from `results/`
 
 ## C. Planned escalation (from DECISION_GATES.md)
-- ⬜ C1. **Stage 2:** Benchmark InferGate routing vs **vLLM Production Stack router** and/or **NVIDIA Dynamo** (the "within X% of Dynamo, far less setup" claim)
+- ⬜ C1. **Stage 2:** Benchmark KVGate routing vs **vLLM Production Stack router** and/or **NVIDIA Dynamo** (the "within X% of Dynamo, far less setup" claim)
 - ⬜ C2. **Stage 3:** Land a small **OSS PR** to vLLM or LMCache (doc/example/small fix) while we're in their code
 
 ## D. Roadmap features (engineering depth — README roadmap)
@@ -57,7 +57,7 @@ F4 go public (gate) · G1/G2 post+résumé (LAST).
 - ⬜ E4. **Security review** pass (API-key auth, per-tenant limits, input validation)
 - ⬜ E5. **Test coverage → ≥90%** (Redis paths, streaming, anthropic, admin) + a docker-compose integration test
 - ⬜ E6. **Benchmark automation:** one-command sweep + auto-generated comparison report
-- ⬜ E7. **Publish to PyPI** (`pip install infergate`) *(optional)*
+- ⬜ E7. **Publish to PyPI** (`pip install kvgate`) *(optional)*
 - ⬜ E8. **mkdocs documentation site** *(optional)*
 - ⬜ E9. Demo asset: asciinema/GIF + a quickstart notebook/Colab
 

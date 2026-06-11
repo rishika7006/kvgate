@@ -2,9 +2,9 @@
   "annotations": { "list": [] },
   "editable": true,
   "graphTooltip": 1,
-  "title": "InferGate — LLM Gateway",
-  "uid": "infergate-main",
-  "tags": ["infergate", "llm"],
+  "title": "KVGate — LLM Gateway",
+  "uid": "kvgate-main",
+  "tags": ["kvgate", "llm"],
   "timezone": "browser",
   "time": { "from": "now-15m", "to": "now" },
   "refresh": "5s",
@@ -17,7 +17,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "sum by (status) (rate(infergate_requests_total[1m]))", "legendFormat": "{{status}}" }
+        { "expr": "sum by (status) (rate(kvgate_requests_total[1m]))", "legendFormat": "{{status}}" }
       ]
     },
     {
@@ -27,9 +27,9 @@
       "datasource": { "type": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
-        { "expr": "histogram_quantile(0.50, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
-        { "expr": "histogram_quantile(0.95, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, sum(rate(infergate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+        { "expr": "histogram_quantile(0.50, sum(rate(kvgate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(kvgate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(kvgate_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
       ]
     },
     {
@@ -39,7 +39,7 @@
       "datasource": { "type": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "steps": [ { "color": "red", "value": 0 }, { "color": "yellow", "value": 0.3 }, { "color": "green", "value": 0.6 } ] } } },
       "targets": [
-        { "expr": "sum(rate(infergate_cache_events_total{outcome=~\".*_hit\"}[5m])) / clamp_min(sum(rate(infergate_cache_events_total[5m])), 0.0001)", "legendFormat": "hit rate" }
+        { "expr": "sum(rate(kvgate_cache_events_total{outcome=~\".*_hit\"}[5m])) / clamp_min(sum(rate(kvgate_cache_events_total[5m])), 0.0001)", "legendFormat": "hit rate" }
       ]
     },
     {
@@ -48,7 +48,7 @@
       "gridPos": { "h": 8, "w": 9, "x": 6, "y": 8 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "sum by (outcome) (rate(infergate_cache_events_total[1m]))", "legendFormat": "{{outcome}}" }
+        { "expr": "sum by (outcome) (rate(kvgate_cache_events_total[1m]))", "legendFormat": "{{outcome}}" }
       ]
     },
     {
@@ -57,7 +57,7 @@
       "gridPos": { "h": 8, "w": 9, "x": 15, "y": 8 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "sum by (direction) (rate(infergate_tokens_total[1m]))", "legendFormat": "{{direction}}" }
+        { "expr": "sum by (direction) (rate(kvgate_tokens_total[1m]))", "legendFormat": "{{direction}}" }
       ]
     },
     {
@@ -66,7 +66,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "sum by (provider) (rate(infergate_routing_decisions_total[1m]))", "legendFormat": "{{provider}}" }
+        { "expr": "sum by (provider) (rate(kvgate_routing_decisions_total[1m]))", "legendFormat": "{{provider}}" }
       ]
     },
     {
@@ -76,7 +76,7 @@
       "datasource": { "type": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
-        { "expr": "histogram_quantile(0.99, sum(rate(infergate_upstream_latency_seconds_bucket[5m])) by (le, provider))", "legendFormat": "{{provider}}" }
+        { "expr": "histogram_quantile(0.99, sum(rate(kvgate_upstream_latency_seconds_bucket[5m])) by (le, provider))", "legendFormat": "{{provider}}" }
       ]
     },
     {
@@ -86,7 +86,7 @@
       "datasource": { "type": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
       "targets": [
-        { "expr": "sum by (model) (rate(infergate_estimated_cost_usd_total[5m]))", "legendFormat": "{{model}}" }
+        { "expr": "sum by (model) (rate(kvgate_estimated_cost_usd_total[5m]))", "legendFormat": "{{model}}" }
       ]
     },
     {
@@ -95,7 +95,7 @@
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "infergate_inflight_requests", "legendFormat": "{{provider}}/{{upstream_model}}" }
+        { "expr": "kvgate_inflight_requests", "legendFormat": "{{provider}}/{{upstream_model}}" }
       ]
     },
     {
@@ -104,8 +104,8 @@
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
       "datasource": { "type": "prometheus" },
       "targets": [
-        { "expr": "sum by (provider) (rate(infergate_routing_failovers_total[1m]))", "legendFormat": "failover {{provider}}" },
-        { "expr": "sum(rate(infergate_rate_limited_total[1m]))", "legendFormat": "rate-limited" }
+        { "expr": "sum by (provider) (rate(kvgate_routing_failovers_total[1m]))", "legendFormat": "failover {{provider}}" },
+        { "expr": "sum(rate(kvgate_rate_limited_total[1m]))", "legendFormat": "rate-limited" }
       ]
     }
   ]

@@ -1,6 +1,6 @@
-# InferGate — Benchmark Report
+# KVGate — Benchmark Report
 
-Honest, reproducible measurements of InferGate's two headline features on real GPUs with a
+Honest, reproducible measurements of KVGate's two headline features on real GPUs with a
 multimodal vision-language model. **No inflated numbers** — where a technique doesn't help,
 we say so and explain when it does.
 

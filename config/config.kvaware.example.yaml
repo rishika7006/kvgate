@@ -1,6 +1,6 @@
-# InferGate config for the multimodal KV/prefix-aware routing benchmark.
+# KVGate config for the multimodal KV/prefix-aware routing benchmark.
 # Two vLLM+LMCache replicas of the SAME multimodal model behind one logical model.
-# Run: infergate run -c config/config.kvaware.example.yaml
+# Run: kvgate run -c config/config.kvaware.example.yaml
 #
 # Scenario D (baseline): set routing.strategy = round_robin   (KV-blind load balancer)
 # Scenario E (headline):  set routing.strategy = prefix_kv_aware

@@ -1,4 +1,4 @@
-# InferGate — Master Handoff & Status (resume-anywhere)
+# KVGate — Master Handoff & Status (resume-anywhere)
 
 > **Purpose:** one self-contained file to continue this project in a fresh session with
 > ZERO extra context. Read this top to bottom. Other docs referenced at the end.
@@ -8,7 +8,7 @@
 
 ## 0. One-paragraph project
 
-**InferGate** = an open-source, OpenAI-compatible **LLM inference gateway** (Python/FastAPI)
+**KVGate** = an open-source, OpenAI-compatible **LLM inference gateway** (Python/FastAPI)
 that sits in front of a fleet of vLLM replicas. Flagship feature: **multimodal KV/prefix-aware
 routing** (`prefix_kv_aware`) — routes each request to the replica that already holds its
 prefix (incl. the same image) warm, maximizing KV reuse. Also: response caching, rate
@@ -16,7 +16,7 @@ limiting, failover/circuit-breaking, Prometheus/Grafana, a Next.js dashboard, 59
 Built by **Rishika Vaish** (new-grad SWE/ML target) to extend her AWS internship work
 (LMCache KV-offload on multimodal LLMs) into a portfolio flagship + benchmark.
 
-- **Private GitHub repo:** `github.com/rishika7006/infergate` (push only-when-good rule).
+- **Private GitHub repo:** `github.com/rishika7006/kvgate` (push only-when-good rule).
 - **Commits authored as `rishika7006` only** (no Claude co-author — history was rewritten).
 
 ---
@@ -86,7 +86,7 @@ a newer driver). Exact pinned set that WORKS (incl. multimodal LMCache):
 ```bash
 python3 -m venv ~/venv && source ~/venv/bin/activate && pip install -U pip
 pip install "vllm==0.11.0" "torch==2.8.0" "transformers==4.57.6" "mistral_common==1.8.2" hf_transfer
-pip install -e .                 # InferGate + deps (httpx, fastapi…)
+pip install -e .                 # KVGate + deps (httpx, fastapi…)
 pip install "lmcache==0.3.7"     # ONLY for the LMCache (Scenario C) test; multimodal-capable
 ```
 - LMCache 0.4.6 (latest) requires transformers≥5.4 → CONFLICTS with vLLM 0.11. Use **0.3.7**.
@@ -128,11 +128,11 @@ pod: `~/ig_route2gpu.sh` (full), `~/ig_de.sh` (gateway+D/E only, replicas alread
 - OR run it as a single self-contained script with replicas + gateway + D/E, launched with
   `setsid`, writing results to the **persistent volume** (`/workspace`, not `/tmp`), and poll
   the `/workspace` JSON with short SSH connections.
-- The InferGate code + `loadtest/multimodal_bench.py` + `scripts/compare_results.py` are all
+- The KVGate code + `loadtest/multimodal_bench.py` + `scripts/compare_results.py` are all
   correct and ready — only the pod-orchestration needs a stable host.
 
 **How Claude drives the pod (for the assistant resuming this):** user authorizes an SSH key
-(`~/.ssh/infergate_runpod.pub`) by pasting it into the pod's `~/.ssh/authorized_keys`; assistant
+(`~/.ssh/kvgate_runpod.pub`) by pasting it into the pod's `~/.ssh/authorized_keys`; assistant
 SSHes from the user's Mac (`Host igpod` in `~/.ssh/config`). Copy repo via
 `tar + scp` (no GitHub token needed). Poll with SHORT ssh commands (long ones drop).
 
@@ -149,7 +149,7 @@ A=a.json B=b.json …` prints a Markdown comparison.
 
 ## 6. Repo map (key files)
 ```
-src/infergate/routing/{keying,affinity,router,strategies,state}.py   # the routing core
+src/kvgate/routing/{keying,affinity,router,strategies,state}.py   # the routing core
 loadtest/multimodal_bench.py        scripts/compare_results.py
 config/{gpu.yaml, config.mock-kvaware.yaml, ...}                      # configs
 dashboard/                          # Next.js live dashboard
@@ -160,7 +160,7 @@ PROJECT_CONTEXT.md                  # broader brief (Cowork handoff)
 ```
 
 ## 7. Résumé-bullet template (fill from §2 once routing GPU number exists)
-> Built **InferGate**, an open-source OpenAI-compatible LLM gateway with multimodal
+> Built **KVGate**, an open-source OpenAI-compatible LLM gateway with multimodal
 > KV/prefix-aware routing. Benchmarked on Llava-OneVision-7B: **LMCache CPU KV-offload cut
 > TTFT ~2× and raised throughput up to 1.65×** under GPU memory pressure (extends my AWS
 > KV-offload work). Designed prefix-aware routing that keeps per-image KV local across a

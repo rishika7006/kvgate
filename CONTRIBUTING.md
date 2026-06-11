@@ -1,13 +1,13 @@
-# Contributing to InferGate
+# Contributing to KVGate
 
-Thanks for your interest in improving InferGate! Contributions of all kinds are
+Thanks for your interest in improving KVGate! Contributions of all kinds are
 welcome — bug reports, docs, new providers, routing strategies, and tests.
 
 ## Development setup
 
 ```bash
-git clone https://github.com/rishika7006/infergate.git
-cd infergate
+git clone https://github.com/rishika7006/kvgate.git
+cd kvgate
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,redis]"
 ```
@@ -27,7 +27,7 @@ and container smoke test.
 ## Project layout
 
 ```
-src/infergate/
+src/kvgate/
   config.py        # YAML config models + env expansion
   models.py        # OpenAI-compatible request/response schemas
   service.py       # request orchestration (cache → route → failover → metrics)

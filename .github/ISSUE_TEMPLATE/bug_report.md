@@ -13,7 +13,7 @@ labels: bug
 2.
 
 **Environment**
-- InferGate version / commit:
+- KVGate version / commit:
 - Python version:
 - Provider(s) and routing strategy:
 

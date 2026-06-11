@@ -3,7 +3,7 @@ global:
   evaluation_interval: 5s
 
 scrape_configs:
-  - job_name: infergate
+  - job_name: kvgate
     metrics_path: /metrics
     static_configs:
-      - targets: ["infergate:8080"]
+      - targets: ["kvgate:8080"]

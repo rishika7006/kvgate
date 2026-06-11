@@ -11,13 +11,13 @@ dev:  ## Install with dev + redis extras
 	pip install -e ".[dev,redis]"
 
 run:  ## Run the gateway (mock providers, no keys needed)
-	infergate run
+	kvgate run
 
 test:  ## Run the test suite
 	pytest
 
 cov:  ## Run tests with coverage report
-	pytest --cov=infergate --cov-report=term-missing
+	pytest --cov=kvgate --cov-report=term-missing
 
 lint:  ## Lint with ruff
 	ruff check .
@@ -29,7 +29,7 @@ typecheck:  ## Type-check with mypy
 	mypy src
 
 docker:  ## Build the Docker image
-	docker build -t infergate:latest .
+	docker build -t kvgate:latest .
 
 up:  ## Start the full stack (gateway + redis + prometheus + grafana)
 	docker compose up --build

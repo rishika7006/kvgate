@@ -4,13 +4,13 @@ import httpx
 import pytest
 import respx
 
-from infergate.config import ProviderConfig
-from infergate.models import ChatCompletionRequest
-from infergate.providers import build_provider
-from infergate.providers.anthropic import AnthropicProvider
-from infergate.providers.base import ProviderError
-from infergate.providers.mock import MockProvider
-from infergate.providers.openai import OpenAIProvider
+from kvgate.config import ProviderConfig
+from kvgate.models import ChatCompletionRequest
+from kvgate.providers import build_provider
+from kvgate.providers.anthropic import AnthropicProvider
+from kvgate.providers.base import ProviderError
+from kvgate.providers.mock import MockProvider
+from kvgate.providers.openai import OpenAIProvider
 
 
 def _req(content="hello"):

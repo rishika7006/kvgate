@@ -1,7 +1,7 @@
 # Mock fleet for dry-running the KV/prefix-aware router with NO GPU.
 # Two mock replicas behind one logical "demo" model, prefix_kv_aware routing,
 # response cache disabled so we observe routing behavior only.
-#   infergate run -c config/config.mock-kvaware.yaml
+#   kvgate run -c config/config.mock-kvaware.yaml
 #   python loadtest/multimodal_bench.py --model demo
 
 server:

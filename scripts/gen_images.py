@@ -29,10 +29,12 @@ for i in range(N):
         x0, y0 = next(g) % 1024, next(g) % 1024
         x1, y1 = next(g) % 1024, next(g) % 1024
         color = (next(g) % 256, next(g) % 256, next(g) % 256)
-        if next(g) % 3 == 0:
-            d.ellipse([min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)], fill=color)
-        elif next(g) % 3 == 1:
-            d.rectangle([min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)], outline=color, width=3)
+        box = [min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)]
+        kind = next(g) % 3
+        if kind == 0:
+            d.ellipse(box, fill=color)
+        elif kind == 1:
+            d.rectangle(box, outline=color, width=3)
         else:
             d.line([x0, y0, x1, y1], fill=color, width=2)
     img.save(os.path.join(OUT, f"img_{i:03d}.png"))

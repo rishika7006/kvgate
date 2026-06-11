@@ -1,4 +1,4 @@
-# How InferGate's KV/prefix-aware routing works
+# How KVGate's KV/prefix-aware routing works
 
 > Plain-language explanation of the `prefix_kv_aware` strategy: what it does, how
 > it decides, what it does **not** know, and how it compares to the existing
@@ -17,9 +17,9 @@ send a request to a replica that never saw that prefix, wasting the cache anothe
 replica already holds. The job of KV-aware routing is to send each request to the
 replica most likely to have its prefix **warm**.
 
-## How InferGate decides (the mechanism)
+## How KVGate decides (the mechanism)
 
-**Key honesty: InferGate does not *know* each replica's true cache state. It
+**Key honesty: KVGate does not *know* each replica's true cache state. It
 *predicts* it from the traffic it has routed.** It keeps its own "notebook" and
 bets that a replica it recently sent a prefix to still has it warm.
 
@@ -56,11 +56,11 @@ dependency, no GPU, no cooperation from the inference engine.
 
 ## What it does NOT know (the honest caveat)
 
-InferGate's routing is a **best-effort prediction**, not ground truth. Its bet can
+KVGate's routing is a **best-effort prediction**, not ground truth. Its bet can
 be wrong if a replica evicted the cache under memory pressure, restarted, or
 received traffic from outside the gateway. Two things keep it honest:
 
-- **`affinity hit rate`** (InferGate metric) — how often the notebook *believed* it
+- **`affinity hit rate`** (KVGate metric) — how often the notebook *believed* it
   found a warm replica.
 - **`prefix_cache_hits`** (vLLM's own metric) — whether the bet *actually* landed on
   real cached memory. The GPU benchmark cross-checks these: a high affinity hit rate
@@ -69,7 +69,7 @@ received traffic from outside the gateway. Two things keep it honest:
 ### A more precise mode we deliberately deferred
 
 vLLM can *publish* KV-cache events (exactly what it holds). A gateway could consume
-those for ground truth instead of inferring. InferGate keeps the inference-based
+those for ground truth instead of inferring. KVGate keeps the inference-based
 approach as the default because it needs **zero engine cooperation** and works with
 heterogeneous backends; consuming real KV events is a planned "precise mode" behind
 the same interface.
@@ -85,7 +85,7 @@ systems as of 2025–2026:
 | **NVIDIA Dynamo** | KV-cache-aware routing via engine **KV events** (NATS/ZMQ) | Heavy datacenter platform; Kubernetes |
 | **llm-d** (Red Hat/IBM) | Precise prefix-cache-aware routing | Kubernetes-native |
 
-**What InferGate contributes (the honest differentiators):**
+**What KVGate contributes (the honest differentiators):**
 
 1. **Lightweight & vendor-neutral** — a plain Docker, OpenAI-compatible gateway;
    no Kubernetes, no platform lock-in. Runs on a laptop or two GPUs.

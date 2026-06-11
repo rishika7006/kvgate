@@ -2,13 +2,13 @@
 #   cp .env.example .env   # optional: add real API keys
 #   docker compose up --build
 services:
-  infergate:
+  kvgate:
     build: .
     ports:
       - "8080:8080"
     environment:
       # Use the example config (Redis-backed cache + rate limiting).
-      INFERGATE_CONFIG: /app/config/config.docker.yaml
+      KVGATE_CONFIG: /app/config/config.docker.yaml
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -32,7 +32,7 @@ services:
     volumes:
       - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
-      - infergate
+      - kvgate
     restart: unless-stopped
 
   grafana:

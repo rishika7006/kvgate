@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from infergate.models import ChatCompletionRequest
-from infergate.routing.keying import build_routing_key, image_marker
+from kvgate.models import ChatCompletionRequest
+from kvgate.routing.keying import build_routing_key, image_marker
 
 
 def _text_req(text, model="qwen-vl"):

@@ -95,7 +95,7 @@ drags in too-new `transformers`/`mistral_common`. This exact pinned set works:
 
 ```bash
 pip install "vllm==0.11.0" "torch==2.8.0" "transformers==4.57.6" "mistral_common==1.8.2" hf_transfer
-pip install -e .          # InferGate + its deps (httpx, fastapi, …) for the benchmark client
+pip install -e .          # KVGate + its deps (httpx, fastapi, …) for the benchmark client
 ```
 Verify the GPU is visible:
 ```bash
@@ -116,7 +116,7 @@ If memory is held by `[Not Found]` PIDs (orphaned, un-killable from the containe
 ## ▶️ Resume checklist (next session)
 
 1. Start the pod → reopen web terminal.
-2. `cd ~/infergate && source ~/venv/bin/activate`
+2. `cd ~/kvgate && source ~/venv/bin/activate`
 3. `nvidia-smi --query-gpu=memory.used --format=csv`  → should be ~0.
    (If the venv/model is gone because the pod was Terminated, re-run the
    "Known-good environment" install above; the model re-downloads in ~3 min.)

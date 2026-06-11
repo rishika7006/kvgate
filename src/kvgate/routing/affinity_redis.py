@@ -9,7 +9,7 @@ writes the same affinity state, so they route coherently toward warm backends.
 
 Layout (one Redis hash per backend replica):
 
-    key   = "{prefix}{replica}"            e.g. "infergate:aff:r1"
+    key   = "{prefix}{replica}"            e.g. "kvgate:aff:r1"
     field = block_hash
     value = last-seen epoch seconds
     + a per-key TTL so a replica that goes quiet ages out entirely.
@@ -35,14 +35,14 @@ class RedisPrefixAffinityIndex:
         url: str,
         ttl_s: float = 300.0,
         max_blocks_per_replica: int = 200_000,
-        key_prefix: str = "infergate:aff:",
+        key_prefix: str = "kvgate:aff:",
     ):
         try:
             import redis  # sync client: routing path is sync; calls are tiny + colocated
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError(
                 "affinity_backend=redis requires the 'redis' package. "
-                "Install with: pip install 'infergate[redis]'"
+                "Install with: pip install 'kvgate[redis]'"
             ) from exc
         self.ttl_s = ttl_s
         self.max_blocks = max(1, max_blocks_per_replica)

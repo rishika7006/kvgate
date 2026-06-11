@@ -1,9 +1,9 @@
-# InferGate — Full Project Context (handoff for discussion)
+# KVGate — Full Project Context (handoff for discussion)
 
 > **Purpose of this file:** a single, self-contained brief so a fresh assistant (e.g.
 > Cowork) has the *entire* context of this project. **Workflow split:** strategy /
 > discussion happens in **Cowork**; hands-on **development** happens in **Claude Code**
-> (this repo lives at `~/Documents/Projects/infergate`). Keep this file updated as the
+> (this repo lives at `~/Documents/Projects/kvgate`). Keep this file updated as the
 > source of truth.
 
 ---
@@ -26,7 +26,7 @@
 
 ## 2. The project in one paragraph
 
-**InferGate** is an open-source, **OpenAI-compatible LLM inference gateway** — a smart
+**KVGate** is an open-source, **OpenAI-compatible LLM inference gateway** — a smart
 "receptionist" that sits in front of a fleet of LLM servers. Its flagship feature is
 **multimodal KV/prefix-aware routing**: it sends each request to the replica that already
 has that request's prefix (**including the same image**) warm in its KV cache, maximizing
@@ -46,7 +46,7 @@ A recurring point of confusion — keep these separate:
 |---|---|---|
 | What | Save/reuse the AI's **KV cache** (its working memory); spill GPU→CPU/SSD | Decide **which server** gets each request so it lands where the cache is warm |
 | Where | **Inside each GPU server** | **In our gateway, in front** |
-| Tool | **LMCache** (the user's AWS tool) | **InferGate** (what we built) |
+| Tool | **LMCache** (the user's AWS tool) | **KVGate** (what we built) |
 | Storage | CPU RAM / SSD (NOT our Redis) | an in-memory affinity table (Redis planned) |
 | Status | ⏳ needs a GPU to run | ✅ built; ⏳ needs GPU to prove speed gain |
 
@@ -64,7 +64,7 @@ limiting* — **not** the KV cache. The KV cache is offloaded by **LMCache to CP
 
 ```
         ┌─────────────────────────────────────────────┐
-        │            InferGate (our gateway)          │   ← ✅ DONE (no GPU)
+        │            KVGate (our gateway)          │   ← ✅ DONE (no GPU)
         │   • OpenAI-compatible API (FastAPI)         │
         │   • Response cache (whole answers)          │
         │   • SMART ROUTING (prefix_kv_aware)         │      hashlib + collections
@@ -148,7 +148,7 @@ traffic with no engine changes, and benchmarked it on vision-language models."*
 
 1. **Finish + benchmark.** GATE: offloading A→C cuts TTFT p95 ≥25%; routing D→E gives ≥2×
    cache-hit rate and ≥20% lower TTFT p95. ✅→ Stage 2.
-2. **Compare vs real tools.** GATE: InferGate within ~10–20% of Dynamo/Prod-Stack hit rate
+2. **Compare vs real tools.** GATE: KVGate within ~10–20% of Dynamo/Prod-Stack hit rate
    with far less setup. ✅→ Stage 3.
 3. **OSS PR.** GATE: a clean, minimal PR opened to vLLM/LMCache.
 
@@ -170,11 +170,11 @@ Decision: **escalate only if numbers justify it** (user chose all 3, sequenced).
 ## 10. Repo map (key files)
 
 ```
-infergate/
+kvgate/
 ├── README.md                      # project overview + quickstart
 ├── PROJECT_CONTEXT.md             # THIS FILE (handoff brief)
 ├── pyproject.toml                 # deps & packaging
-├── src/infergate/
+├── src/kvgate/
 │   ├── app.py  server.py  cli.py  config.py  models.py  service.py
 │   ├── api/        # chat, models, health/metrics, admin endpoints
 │   ├── providers/  # mock, openai, openai_compatible (vLLM), anthropic

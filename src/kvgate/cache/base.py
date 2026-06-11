@@ -32,7 +32,7 @@ def canonical_key(request: ChatCompletionRequest) -> str:
         "stop": request.stop,
     }
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return "infergate:exact:" + hashlib.sha256(blob.encode()).hexdigest()
+    return "kvgate:exact:" + hashlib.sha256(blob.encode()).hexdigest()
 
 
 class KVStore:

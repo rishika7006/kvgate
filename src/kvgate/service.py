@@ -70,7 +70,7 @@ class GatewayService:
             metrics.REQUESTS.labels(request.model, "cache", "false").inc()
             resp = ChatCompletionResponse.model_validate(cached.response)
             resp.id = _request_id()
-            resp.infergate = {
+            resp.kvgate = {
                 "cache": cached.kind,
                 "similarity": round(cached.similarity, 4),
                 "latency_ms": round((time.monotonic() - t_start) * 1000, 2),
@@ -135,7 +135,7 @@ class GatewayService:
                     )
                 ],
                 usage=usage,
-                infergate={
+                kvgate={
                     "cache": "miss",
                     "provider": state.dep.provider,
                     "upstream_model": result.upstream_model,
@@ -264,7 +264,7 @@ class GatewayService:
                 )
             ],
             usage=usage,
-            infergate={"cache": "miss", "provider": state.dep.provider},
+            kvgate={"cache": "miss", "provider": state.dep.provider},
         )
         await self.cache.put(request, response.model_dump())
 
@@ -285,7 +285,7 @@ def _sse_chunk(
     )
     payload = chunk.model_dump(exclude_none=True)
     if cache:
-        payload["infergate"] = {"cache": cache}
+        payload["kvgate"] = {"cache": cache}
     return f"data: {json.dumps(payload)}\n\n"
 
 

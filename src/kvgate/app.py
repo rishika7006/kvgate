@@ -23,7 +23,7 @@ from .ratelimit import build_rate_limiter
 from .routing import Router
 from .service import GatewayService
 
-logger = logging.getLogger("infergate")
+logger = logging.getLogger("kvgate")
 
 
 def create_app(settings: Optional[Settings] = None, config_path: Optional[str] = None) -> FastAPI:
@@ -32,7 +32,7 @@ def create_app(settings: Optional[Settings] = None, config_path: Optional[str] =
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         logger.info(
-            "InferGate starting: %d providers, %d models, strategy=%s, cache=%s",
+            "KVGate starting: %d providers, %d models, strategy=%s, cache=%s",
             len(settings.providers),
             len(settings.models),
             settings.routing.strategy,
@@ -43,15 +43,15 @@ def create_app(settings: Optional[Settings] = None, config_path: Optional[str] =
             await provider.aclose()
         await app.state.cache.aclose()
         await app.state.rate_limiter.aclose()
-        logger.info("InferGate shut down cleanly.")
+        logger.info("KVGate shut down cleanly.")
 
     app = FastAPI(
-        title="InferGate",
+        title="KVGate",
         description=(
             "OpenAI-compatible LLM inference gateway: "
             "routing, caching, rate limiting, observability."
         ),
-        version=__import__("infergate").__version__,
+        version=__import__("kvgate").__version__,
         lifespan=lifespan,
     )
 
@@ -84,7 +84,7 @@ def create_app(settings: Optional[Settings] = None, config_path: Optional[str] =
     @app.get("/", tags=["ops"])
     async def root() -> dict:
         return {
-            "name": "InferGate",
+            "name": "KVGate",
             "version": app.version,
             "docs": "/docs",
             "endpoints": ["/v1/chat/completions", "/v1/models", "/metrics", "/admin/stats"],
