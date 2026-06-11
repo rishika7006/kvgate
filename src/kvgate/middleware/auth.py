@@ -16,6 +16,7 @@ from pydantic import BaseModel
 class Principal(BaseModel):
     tenant: str = "anonymous"
     rpm: Optional[int] = None
+    budget_usd: Optional[float] = None
 
 
 async def get_principal(
@@ -23,7 +24,7 @@ async def get_principal(
 ) -> Principal:
     settings = request.app.state.settings
     if not settings.auth.enabled:
-        return Principal(tenant="anonymous", rpm=None)
+        return Principal(tenant="anonymous", rpm=None, budget_usd=None)
 
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Missing or malformed Authorization header.")
@@ -33,4 +34,4 @@ async def get_principal(
     entry = key_map.get(token)
     if entry is None:
         raise HTTPException(status_code=401, detail="Invalid API key.")
-    return Principal(tenant=entry.tenant, rpm=entry.rpm)
+    return Principal(tenant=entry.tenant, rpm=entry.rpm, budget_usd=entry.budget_usd)

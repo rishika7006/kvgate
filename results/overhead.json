@@ -1,0 +1,23 @@
+{
+  "args": {
+    "host": "http://localhost:8085",
+    "model": "demo",
+    "requests": 1000,
+    "concurrency": 1,
+    "out": "results/overhead.json"
+  },
+  "summary": {
+    "requests": 1000,
+    "succeeded": 1000,
+    "failed": 0,
+    "concurrency": 1,
+    "wall_s": 1.155,
+    "throughput_rps": 865.8,
+    "overhead_ms": {
+      "p50": 1.065,
+      "p95": 1.522,
+      "p99": 1.721,
+      "mean": 1.132
+    }
+  }
+}

@@ -16,6 +16,7 @@ auth:
     - key: ${KVGATE_DEMO_KEY:-sk-demo-local}
       tenant: demo
       rpm: 1200          # per-key override of ratelimit.default_rpm
+      budget_usd: 50.0   # per-key spend cap per budget.window_s (overrides budget.default_usd)
 
 # ---- Caching ----
 cache:
@@ -37,6 +38,14 @@ ratelimit:
   redis_url: ${REDIS_URL:-redis://localhost:6379/0}
   default_rpm: 600
   burst: 60
+
+# ---- Per-tenant spend caps (budgets) ----
+# When a tenant's estimated spend in the current window exceeds its cap, further
+# requests are rejected with HTTP 402 until the window resets.
+budget:
+  enabled: false
+  default_usd: 100.0     # cap for tenants without a per-key budget_usd (null = unlimited)
+  window_s: 86400        # window length in seconds (default: 1 day)
 
 # ---- Routing ----
 routing:

@@ -25,6 +25,7 @@ Benchmarked on **Llava-OneVision-7B** (a vision-language model) on rented A40 GP
 |---|---|---|
 | 🧠 **Prefix-aware routing** | **1.84× lower tail latency** (TTFT p95 2783 → 1516 ms), +14% throughput, **98.6%** affinity, load stays balanced | 2× A40, one replica per GPU, 12 images, KV capped |
 | ⚡ **LMCache CPU KV offload** | **up to 2.0× lower TTFT**, **+65% throughput** under memory pressure | 1× A40, working set overflows GPU KV |
+| 🪶 **Gateway overhead** | **~1 ms p50, 1.7 ms p99** added latency per request — negligible vs multimodal TTFT (250–2700 ms) | zero-latency mock backend, single worker |
 
 <p align="center">
   <img src="docs/assets/routing_ttft.png" width="48%" alt="Smart routing TTFT before/after" />
@@ -57,8 +58,25 @@ Serving open-source LLMs in production means re-solving the same problems every 
 | ♻️ **Failover + circuit breaking** | Retryable upstream errors automatically fail over to the next-best deployment; repeatedly-failing deployments are ejected and given cooldown. |
 | ⚡ **Exact + semantic caching** | Identical requests hit an exact cache; *similar* prompts hit a semantic cache (cosine similarity). Redis backend enables **cross-replica reuse**. |
 | 🚦 **Rate limiting** | Token-bucket limits per API key / tenant, in-memory or Redis (distributed). |
+| 💰 **Per-tenant budgets** | Spend caps per tenant/API key; once a tenant's estimated spend exceeds its cap in the window, requests are rejected with HTTP 402 until reset. |
 | 📊 **Observability** | Prometheus metrics at `/metrics`, a ready-made Grafana dashboard, and `/admin/stats` for live routing state. |
 | 🧪 **Runs with no keys** | A deterministic mock provider + dependency-free hashing embedder mean everything works offline for demos, CI, and load tests. |
+
+---
+
+## How KVGate compares
+
+Most "LLM gateways" are **provider-aggregation proxies**: one API in front of OpenAI/Anthropic/Gemini, with *response* caching and cost routing. KVGate operates one layer deeper — at the **KV-cache layer** of a self-hosted vLLM fleet.
+
+| | Provider-aggregation gateways (LiteLLM, InferXgate, …) | vLLM scheduling sidecars | **KVGate** |
+|---|---|---|---|
+| Primary job | Fan out to many hosted providers | Admission control / scheduling | Maximize **KV-cache reuse** across a replica fleet |
+| Caching | Response cache (exact/semantic) | — | Response cache **+ KV-cache offload** (GPU→CPU→Redis) |
+| Routing | By cost / availability | — | **Prefix/KV-aware** (incl. per-image hash) to the warm replica |
+| Multimodal | Text-focused | varies | **Vision-language first-class** (image-hash routing) |
+| Evidence | Feature lists | research | **Measured GPU benchmarks** (this repo) |
+
+KVGate also includes the table-stakes gateway features (OpenAI-compatible API, failover, rate limiting, per-tenant budgets, Prometheus/Grafana) — but its **differentiator is the KV-cache work**, which is where the measured wins come from. It's complementary to a provider proxy, not a replacement for one.
 
 ---
 

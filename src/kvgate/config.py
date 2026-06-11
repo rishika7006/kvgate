@@ -46,11 +46,21 @@ class ApiKey(BaseModel):
     key: str
     tenant: str = "default"
     rpm: Optional[int] = None  # per-key override of the default rate limit
+    budget_usd: Optional[float] = None  # per-key spend cap per window (overrides default)
 
 
 class AuthSettings(BaseModel):
     enabled: bool = False
     api_keys: List[ApiKey] = Field(default_factory=list)
+
+
+class BudgetSettings(BaseModel):
+    """Per-tenant spend caps. When a tenant's spend in the current window exceeds its
+    cap, further requests are rejected with HTTP 402 until the window resets."""
+
+    enabled: bool = False
+    default_usd: Optional[float] = None  # cap applied to tenants without a per-key cap
+    window_s: int = 86400  # rolling window length (default: 1 day)
 
 
 class SemanticCacheSettings(BaseModel):
@@ -145,6 +155,7 @@ class Settings(BaseModel):
     auth: AuthSettings = Field(default_factory=AuthSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
     ratelimit: RateLimitSettings = Field(default_factory=RateLimitSettings)
+    budget: BudgetSettings = Field(default_factory=BudgetSettings)
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
     providers: List[ProviderConfig] = Field(default_factory=list)
     models: List[ModelConfig] = Field(default_factory=list)

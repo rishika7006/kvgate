@@ -1,0 +1,16 @@
+# Config for the gateway-overhead micro-benchmark (loadtest/overhead_bench.py).
+# Zero-latency mock backend, cache/ratelimit/budget off, so measured latency is the
+# gateway's own request-handling overhead.
+server: {host: 0.0.0.0, port: 8085}
+auth: {enabled: false}
+cache: {enabled: false}
+ratelimit: {enabled: false}
+budget: {enabled: false}
+routing:
+  strategy: round_robin
+providers:
+  - {name: mock, type: mock, latency_ms: 0, tokens_per_second: 100000}
+models:
+  - name: demo
+    deployments:
+      - {provider: mock, model: demo}

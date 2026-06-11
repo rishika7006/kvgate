@@ -102,7 +102,26 @@ speed. Reported as measured; we don't dress Redis up as something it isn't.
 > Raw: `results/offload/{control,cpu,redis}.json`, full run log `results/offload/cpuproof.out`,
 > LMCache transfer logs `results/offload/cpu.log`.
 
-## 4. Reproducing
+## 4. Gateway overhead
+
+**Setup.** `loadtest/overhead_bench.py` fires unique (cache-busting) requests at KVGate in
+front of a **zero-latency mock backend** (`config/config.overhead.yaml`), so the measured
+latency is the gateway's own work (auth, routing decision, metrics, serialization) plus
+loopback HTTP — not any model compute.
+
+| Concurrency | Added latency p50 / p95 / p99 | Throughput |
+|---|---|---|
+| 1 (intrinsic per-request) | **1.07 / 1.52 / 1.72 ms** | 866 req/s single-stream |
+| 16 (single worker, saturated) | 27 / 76 / 119 ms | ~460 req/s |
+
+**Takeaway.** KVGate adds **~1 ms per request** — **negligible** next to multimodal TTFT
+(250–2700 ms measured above), i.e. well under 1% of inference time. Throughput here is a
+single Python/uvicorn worker; the gateway is stateless, so it scales horizontally with more
+workers/replicas. (A Rust gateway would push raw proxy throughput higher, but for an LLM
+fleet the gateway is never the bottleneck — the GPU is, which is exactly what the KV-cache
+work above optimizes.) Raw: `results/overhead.json`, `results/overhead_peak.json`.
+
+## 5. Reproducing
 
 ```bash
 # charts (from the raw JSONs already in results/)
@@ -114,9 +133,13 @@ python scripts/compare_results.py D=results/routing/D.json E=results/routing/E.j
 # the GPU runs themselves (need the RunPod env in HANDOFF.md §3):
 #   routing : scripts-staged ig_route2gpu.sh (2 replicas, one per GPU, ports 19001/19002)
 #   lmcache : single replica with --kv-transfer-config LMCacheConnectorV1, KV cap sweep
+
+# gateway overhead (no GPU needed):
+kvgate run -c config/config.overhead.yaml --port 8085 &
+python loadtest/overhead_bench.py --host http://localhost:8085 --requests 1000 --concurrency 1
 ```
 
-## 4. Methodology notes & caveats (read these)
+## 6. Methodology notes & caveats (read these)
 
 - **`--enforce-eager`** on every run: otherwise the first requests eat CUDA-graph compile
   time and pollute TTFT percentiles.

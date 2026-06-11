@@ -28,6 +28,31 @@ async def _enforce_rate_limit(request: Request, principal: Principal) -> None:
         )
 
 
+def _enforce_budget(request: Request, principal: Principal) -> None:
+    budget = request.app.state.budget
+    decision = budget.check(principal.tenant, principal.budget_usd)
+    if not decision.allowed:
+        metrics.BUDGET_REJECTED.labels(principal.tenant).inc()
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                f"Spend cap reached for tenant '{principal.tenant}' "
+                f"(${decision.spent_usd:.4f} of ${decision.cap_usd:.2f}). "
+                f"Resets in {int(decision.reset_in_s)}s."
+            ),
+            headers={"Retry-After": str(int(decision.reset_in_s) + 1)},
+        )
+
+
+def _record_spend(request: Request, principal: Principal, response) -> None:
+    try:
+        cost = float(getattr(response, "kvgate", {}).get("estimated_cost_usd", 0.0))
+    except (AttributeError, TypeError, ValueError):
+        cost = 0.0
+    spent = request.app.state.budget.record(principal.tenant, cost)
+    metrics.BUDGET_SPENT.labels(principal.tenant).set(spent)
+
+
 @router.post("/chat/completions")
 async def chat_completions(
     request: Request,
@@ -35,6 +60,7 @@ async def chat_completions(
     principal: Principal = Depends(get_principal),
 ):
     await _enforce_rate_limit(request, principal)
+    _enforce_budget(request, principal)
     service = request.app.state.service
 
     if body.stream:
@@ -56,4 +82,5 @@ async def chat_completions(
         response = await service.complete(body)
     except GatewayError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    _record_spend(request, principal, response)
     return response

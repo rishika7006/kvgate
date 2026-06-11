@@ -100,6 +100,20 @@ INFLIGHT = Gauge(
     registry=REGISTRY,
 )
 
+BUDGET_SPENT = Gauge(
+    "kvgate_budget_spent_usd",
+    "Estimated spend in the current budget window, per tenant.",
+    ["tenant"],
+    registry=REGISTRY,
+)
+
+BUDGET_REJECTED = Counter(
+    "kvgate_budget_rejected_total",
+    "Requests rejected for exceeding a tenant spend cap.",
+    ["tenant"],
+    registry=REGISTRY,
+)
+
 
 def record_cache(outcome: str) -> None:
     CACHE_EVENTS.labels(outcome=outcome).inc()

@@ -20,6 +20,7 @@ from .cache import build_cache
 from .config import Settings, load_settings
 from .providers import build_providers
 from .ratelimit import build_rate_limiter
+from .ratelimit.budget import BudgetTracker
 from .routing import Router
 from .service import GatewayService
 
@@ -66,6 +67,7 @@ def create_app(settings: Optional[Settings] = None, config_path: Optional[str] =
     router = Router(settings, providers)
     cache = build_cache(settings.cache)
     rate_limiter = build_rate_limiter(settings.ratelimit)
+    budget = BudgetTracker(settings.budget)
     service = GatewayService(settings, router, cache)
 
     app.state.settings = settings
@@ -73,6 +75,7 @@ def create_app(settings: Optional[Settings] = None, config_path: Optional[str] =
     app.state.router = router
     app.state.cache = cache
     app.state.rate_limiter = rate_limiter
+    app.state.budget = budget
     app.state.service = service
     app.state.api_key_map = {k.key: k for k in settings.auth.api_keys}
 
