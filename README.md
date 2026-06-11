@@ -247,7 +247,7 @@ ruff format .          # format
 mypy src               # type-check
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ---
 
