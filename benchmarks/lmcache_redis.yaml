@@ -1,0 +1,7 @@
+# LMCache config: offload KV directly to Redis (the cross-host / capacity tier).
+# local_cpu: false means KV is written straight to Redis with no persistent CPU cache tier.
+# Needs a reachable Redis (e.g. `redis-server --daemonize yes` on the host).
+chunk_size: 256
+local_cpu: false
+remote_url: "redis://localhost:6379"
+remote_serde: "naive"

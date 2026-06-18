@@ -1,0 +1,6 @@
+# LMCache config: offload KV to CPU RAM (the latency-win tier).
+# Used by the GPU offload benchmark. Point a vLLM replica at it with
+#   LMCACHE_CONFIG_FILE=benchmarks/lmcache_cpu.yaml vllm serve ... --kv-transfer-config '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both"}'
+chunk_size: 256
+local_cpu: true
+max_local_cpu_size: 30   # GB of CPU RAM LMCache may use for KV

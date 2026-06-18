@@ -133,7 +133,9 @@ python loadtest/overhead_bench.py --host http://localhost:8085 --requests 1000 -
 
 The GPU runs (routing and offload) use vLLM 0.11.0 + LMCache 0.3.7 on a CUDA 12.8 host. Routing
 uses two replicas (one per GPU) with the gateway flipping `routing.strategy`; offload uses a
-single replica with `--kv-transfer-config LMCacheConnectorV1` and a KV-cap sweep.
+single replica with `--kv-transfer-config LMCacheConnectorV1` and a KV-cap sweep. The full
+environment pins, exact `vllm serve` commands, LMCache config files, and image-generation step
+are in [`benchmarks/README.md`](../benchmarks/README.md).
 
 ---
 
