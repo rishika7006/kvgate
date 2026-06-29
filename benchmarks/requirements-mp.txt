@@ -1,0 +1,7 @@
+# MP-mode stack for the vLLM replicas (not the KVGate gateway). CUDA 13 host.
+# Pin lmcache==0.5.0: unpinned resolves to 0.3.7, which predates MP mode.
+vllm==0.23.0
+lmcache==0.5.0
+hf_transfer
+pillow
+redis
