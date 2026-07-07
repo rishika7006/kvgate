@@ -1,0 +1,11 @@
+# MP-mode cache: CPU L1 + Redis L2. Successor to the in-process lmcache_cpu.yaml.
+# The harness applies these settings via `lmcache server` CLI flags.
+l1:
+  backend: cpu
+  size_gb: 2
+  eviction_policy: LRU
+l2:
+  adapter: resp
+  host: 127.0.0.1
+  port: 6379
+chunk_size: 256
