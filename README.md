@@ -9,7 +9,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/lint-ruff-orange.svg)](https://github.com/astral-sh/ruff)
 
-**[Live demo](https://kvgate.vercel.app)** · **[Benchmark report](docs/BENCHMARK_REPORT.md)**
+**[Live demo](https://kvgate.vercel.app)** · **[Benchmark report](docs/BENCHMARK_REPORT.md)** · **[LMCache MP analysis (CPU L1 + Redis L2)](docs/KVGATE_ANALYSIS.pdf)**
 
 </div>
 
